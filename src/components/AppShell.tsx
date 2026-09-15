@@ -19,6 +19,7 @@ const nav = [
   { to: "/activities", label: "Aktivitas", glyph: "◈" },
   { to: "/organizers", label: "Organizer", glyph: "◍" },
   { to: "/settings/business-hours", label: "Pengaturan", glyph: "⚙" },
+  { to: "/settings/users", label: "Pengguna", glyph: "◉", adminOnly: true },
 ] as const;
 
 const mobileNav = [
@@ -92,7 +93,9 @@ export function AppShell({
             </div>
           </div>
           <nav className="mt-8 flex flex-col gap-1">
-            {nav.map((item) => {
+            {nav
+              .filter((item) => !("adminOnly" in item && item.adminOnly) || role === "admin")
+              .map((item) => {
               const active = item.to === path;
               const showBadge = item.to === "/" && conflictCount > 0;
               return (

@@ -38,3 +38,11 @@ export async function loginAsAdmin(page: Page) {
 export async function loginAsStaff(page: Page) {
   await login(page, STAFF_EMAIL);
 }
+
+export async function logout(page: Page) {
+  await page.getByRole("button", { name: "Keluar" }).click();
+  // Wait for the login page to actually render instead of just checking the
+  // URL — a redirect can land on /login before the form itself is ready,
+  // and immediately calling login() again would race that.
+  await page.getByLabel("Email").waitFor({ timeout: 10_000 });
+}
