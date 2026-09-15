@@ -19,9 +19,9 @@ Ini jadi masalah operasional begitu:
 
 Ditinjau dari screenshot halaman "Manajemen Pengguna" aplikasi Lovin Milk. Yang **diadopsi** dan yang **tidak**:
 
-**Diadopsi (cocok untuk Arayya):**
-- Layout tabel: Nama · Peran (dropdown inline, langsung ubah role tanpa dialog terpisah) · Status (badge) · Dibuat (tanggal) · Aktif (toggle switch).
-- Search by nama.
+**Diadopsi (cocok untuk Arayya), tapi dengan gaya visual project ini sendiri — bukan tiru tampilan Lovin Milk apa adanya:**
+- Layout tabel: Nama · Peran (dropdown inline, langsung ubah role tanpa dialog terpisah) · Status (badge) · Dibuat (tanggal) · Aktif (toggle switch). Semua komponen ini **sudah ada** di project (`components/ui/select.tsx`, `badge.tsx`, `switch.tsx`, `table.tsx`) — tinggal dipakai ulang, konsisten dengan halaman Area/Activity/Organizer yang sudah jadi (card "glass", `Table`/`TableRow`, `Badge` dengan variant "default"/"secondary" untuk status Aktif/Nonaktif).
+- Search by nama, pakai `Input` yang sama seperti pencarian di halaman Area/Activity/Organizer (sudah pola baku: box search di atas tabel dalam card "glass").
 - **Self-row protection** — baris milik user yang sedang login sendiri di-lock (dropdown role & toggle aktif disabled), supaya tidak ada yang bisa menurunkan/menonaktifkan dirinya sendiri secara tidak sengaja.
 
 **Tidak diadopsi — provisioning via self-signup:**
@@ -65,19 +65,24 @@ Halaman baru **`/settings/users`** (khusus Admin), dengan kemampuan:
 - Setiap action: cek dulu pemanggilnya admin (baca session di server) sebelum lanjut.
 
 ### 3. UI (`src/app/(app)/settings/users/page.tsx` + `users-client.tsx`)
-- Tabel ala referensi: Nama, Email, Peran (Select inline), Status (Badge), Dibuat, Aktif (Switch inline).
-- Baris milik diri sendiri: Select & Switch di-disable, ditandai teks kecil "(Anda)" di bawah nama — konsisten dengan referensi.
-- Dialog "Tambah User" (form: nama, email, password, role) dan dialog kecil "Reset Password" per-baris.
-- Tambah link "Pengguna" di menu Pengaturan (sidebar `AppShell.tsx` dan halaman `/more` untuk mobile).
+- Ikuti struktur halaman settings yang sudah ada (`business-hours-client.tsx`/`areas-client.tsx` sebagai referensi pola, bukan Lovin Milk): `AppShell` dengan title "Manajemen Pengguna", card "glass" berisi search box, lalu card "glass" lain berisi `Table`.
+- Kolom tabel: Nama, Email, Peran (`Select` inline — konsisten dengan pola Select yang sudah dipakai di form Area/Activity), Status (`Badge` variant default/secondary, label "Aktif"/"Nonaktif" — sama seperti Badge status di halaman Area), Dibuat (tanggal, format sama seperti `formatDateOnly` yang sudah dipakai di Booking), Aktif (`Switch` inline).
+- Baris milik diri sendiri: `Select` & `Switch` di-disable (prop `disabled`), ditandai teks kecil `text-muted-ink` "(Anda)" di bawah nama — meniru *pola* self-lock referensi, bukan warna/style-nya.
+- Dialog "Tambah User" pakai `Dialog`+`Form`+`FormField` yang sama seperti dialog create Area/Activity/Organizer (field: nama, email, password, role via `Select`).
+- Dialog kecil "Reset Password" per-baris — pola `AlertDialog` atau `Dialog` sederhana, konsisten dengan dialog konfirmasi Batalkan Booking yang sudah ada.
+- Tambah link "Pengguna" di menu Pengaturan (sidebar `AppShell.tsx`, array `nav`, dan halaman `/more` untuk mobile).
 
 ### 4. Testing
 - Unit test untuk logic guard "tidak bisa membuat 0 admin aktif" (fungsi murni, mudah ditest tanpa DB).
 - E2e test baru (`tests/e2e/user-management.spec.ts`): admin bisa buat user baru dengan role staff dan langsung login pakai kredensial itu; staff yang login TIDAK bisa akses halaman `/settings/users`; admin bisa ubah role & nonaktifkan user test lewat kontrol inline; baris admin sendiri terverifikasi disabled; bersihkan data test seperti biasa.
 
+## Keputusan Terkonfirmasi
+
+- **Tingkatan role: tetap 2 (Admin/Staff)** — tidak menambah "Super Admin". Dropdown Peran di UI cukup 2 opsi, sama seperti yang sudah berjalan sekarang.
+
 ## Pertanyaan yang Masih Terbuka
 
-1. **Tingkatan role** — tetap 2 tingkat (Admin/Staff) seperti sekarang, atau tambah "Super Admin" di atas Admin (dibahas sebelumnya)? Dokumen ini ditulis generik (kolom Peran bisa berisi role apa pun) supaya mudah diperluas ke 3 tingkat nanti kalau dibutuhkan, tapi implementasi awal defaultnya tetap 2 tingkat kecuali Anda konfirmasi sebaliknya.
-2. **Panjang/kompleksitas minimum password sementara** — cukup ikut aturan yang sudah ada di form login (`min 6 karakter`), atau dinaikkan jadi lebih ketat khusus untuk fitur ini?
+1. **Panjang/kompleksitas minimum password sementara** — cukup ikut aturan yang sudah ada di form login (`min 6 karakter`), atau dinaikkan jadi lebih ketat khusus untuk fitur ini?
 
 ## Verifikasi (setelah eksekusi, kalau disetujui)
 
