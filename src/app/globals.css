@@ -113,36 +113,13 @@
   background-image: var(--gradient-brand);
 }
 
-@keyframes drift {
-  0% { transform: translate3d(0,0,0) scale(1); }
-  50% { transform: translate3d(24px,-18px,0) scale(1.08); }
-  100% { transform: translate3d(0,0,0) scale(1); }
-}
-@keyframes drift2 {
-  0% { transform: translate3d(0,0,0) scale(1); }
-  50% { transform: translate3d(-28px,22px,0) scale(1.1); }
-  100% { transform: translate3d(0,0,0) scale(1); }
-}
-@keyframes drift3 {
-  0% { transform: translate3d(0,0,0) scale(1); }
-  50% { transform: translate3d(18px,26px,0) scale(1.06); }
-  100% { transform: translate3d(0,0,0) scale(1); }
-}
-
-@utility blob-a { animation: drift 14s ease-in-out infinite; }
-@utility blob-b { animation: drift2 18s ease-in-out infinite; }
-@utility blob-c { animation: drift3 16s ease-in-out infinite; }
-
-/* Continuously animating a large blurred fixed-position element is expensive
-   to composite on mobile GPUs. Keep the blobs as static decoration on small
-   screens (and for anyone who's asked for reduced motion) instead. */
-@media (max-width: 768px), (prefers-reduced-motion: reduce) {
-  .blob-a,
-  .blob-b,
-  .blob-c {
-    animation: none;
-  }
-}
+/* Continuously animating a large blurred fixed-position element forces the
+   browser to keep recompositing an expensive blur filter forever, on every
+   page — noticeable as lag on mobile GPUs and unnecessary background GPU
+   load on desktop too. Keep the blobs as static decoration everywhere. */
+@utility blob-a { animation: none; }
+@utility blob-b { animation: none; }
+@utility blob-c { animation: none; }
 
 @layer base {
   * {
