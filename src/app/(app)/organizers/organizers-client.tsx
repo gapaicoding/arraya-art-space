@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,17 +56,58 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function OrganizersClient({ initialOrganizers }: { initialOrganizers: Organizer[] }) {
+export const PAGE_SIZE = 20;
+
+export function OrganizersClient({
+  initialOrganizers,
+  initialCount,
+}: {
+  initialOrganizers: Organizer[];
+  initialCount: number;
+}) {
   const { isAdmin } = useAuth();
   const [organizers, setOrganizers] = useState(initialOrganizers);
+  const [totalCount, setTotalCount] = useState(initialCount);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Organizer | null>(null);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const filtered = useMemo(
-    () => organizers.filter((o) => o.name.toLowerCase().includes(search.toLowerCase())),
-    [organizers, search],
-  );
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => loadOrganizers(1, search), search === "" ? 0 : 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  async function loadOrganizers(targetPage: number, searchValue: string) {
+    const supabase = createClient();
+    const from = (targetPage - 1) * PAGE_SIZE;
+    let query = supabase.from("organizers").select("*", { count: "exact" });
+    if (searchValue) {
+      query = query.ilike("name", `%${searchValue}%`);
+    }
+    const { data, count, error } = await query
+      .order("name", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      toast.error("Gagal memuat data: " + error.message);
+      return;
+    }
+    setOrganizers(data ?? []);
+    setTotalCount(count ?? 0);
+    setPage(targetPage);
+  }
+
+  function goToPage(targetPage: number) {
+    if (targetPage < 1 || targetPage > totalPages) return;
+    loadOrganizers(targetPage, search);
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -105,26 +146,21 @@ export function OrganizersClient({ initialOrganizers }: { initialOrganizers: Org
     const supabase = createClient();
     const payload = { ...values, email: values.email || null };
     if (editing) {
-      const { data, error } = await supabase
-        .from("organizers")
-        .update(payload)
-        .eq("id", editing.id)
-        .select()
-        .single();
+      const { error } = await supabase.from("organizers").update(payload).eq("id", editing.id);
       if (error) {
         toast.error("Gagal menyimpan: " + error.message);
         return;
       }
-      setOrganizers((prev) => prev.map((o) => (o.id === editing.id ? (data as Organizer) : o)));
       toast.success("Organizer diperbarui");
+      await loadOrganizers(page, search);
     } else {
-      const { data, error } = await supabase.from("organizers").insert(payload).select().single();
+      const { error } = await supabase.from("organizers").insert(payload);
       if (error) {
         toast.error("Gagal menambah: " + error.message);
         return;
       }
-      setOrganizers((prev) => [...prev, data as Organizer]);
       toast.success("Organizer ditambahkan");
+      await loadOrganizers(1, search);
     }
     setOpen(false);
   }
@@ -282,7 +318,7 @@ export function OrganizersClient({ initialOrganizers }: { initialOrganizers: Org
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((o) => (
+              {organizers.map((o) => (
                 <TableRow key={o.id}>
                   <TableCell className="font-medium">{o.name}</TableCell>
                   <TableCell className="capitalize">{o.type === "internal" ? "Internal" : "Eksternal"}</TableCell>
@@ -302,7 +338,7 @@ export function OrganizersClient({ initialOrganizers }: { initialOrganizers: Org
                   )}
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {organizers.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={isAdmin ? 6 : 5} className="text-center text-muted-ink">
                     Tidak ada data.
@@ -312,6 +348,31 @@ export function OrganizersClient({ initialOrganizers }: { initialOrganizers: Org
             </TableBody>
           </Table>
         </div>
+        {totalCount > 0 && (
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted-ink">
+            <p>
+              Halaman {page} dari {totalPages} ({totalCount} organizer)
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => goToPage(page - 1)}
+              >
+                Sebelumnya
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page >= totalPages}
+                onClick={() => goToPage(page + 1)}
+              >
+                Berikutnya
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );

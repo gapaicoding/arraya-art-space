@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -58,23 +58,60 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+export const PAGE_SIZE = 20;
+
 export function ActivitiesClient({
   initialActivities,
+  initialCount,
   organizers,
 }: {
   initialActivities: Activity[];
+  initialCount: number;
   organizers: Organizer[];
 }) {
   const { isAdmin } = useAuth();
   const [activities, setActivities] = useState(initialActivities);
+  const [totalCount, setTotalCount] = useState(initialCount);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Activity | null>(null);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const filtered = useMemo(
-    () => activities.filter((a) => a.name.toLowerCase().includes(search.toLowerCase())),
-    [activities, search],
-  );
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => loadActivities(1, search), search === "" ? 0 : 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  async function loadActivities(targetPage: number, searchValue: string) {
+    const supabase = createClient();
+    const from = (targetPage - 1) * PAGE_SIZE;
+    let query = supabase.from("activities").select("*", { count: "exact" });
+    if (searchValue) {
+      query = query.ilike("name", `%${searchValue}%`);
+    }
+    const { data, count, error } = await query
+      .order("name", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      toast.error("Gagal memuat data: " + error.message);
+      return;
+    }
+    setActivities(data ?? []);
+    setTotalCount(count ?? 0);
+    setPage(targetPage);
+  }
+
+  function goToPage(targetPage: number) {
+    if (targetPage < 1 || targetPage > totalPages) return;
+    loadActivities(targetPage, search);
+  }
 
   const organizerName = (id: string | null) =>
     organizers.find((o) => o.id === id)?.name ?? "-";
@@ -126,26 +163,21 @@ export function ActivitiesClient({
       capacity_recommendation: values.capacity_recommendation ?? null,
     };
     if (editing) {
-      const { data, error } = await supabase
-        .from("activities")
-        .update(payload)
-        .eq("id", editing.id)
-        .select()
-        .single();
+      const { error } = await supabase.from("activities").update(payload).eq("id", editing.id);
       if (error) {
         toast.error("Gagal menyimpan: " + error.message);
         return;
       }
-      setActivities((prev) => prev.map((a) => (a.id === editing.id ? (data as Activity) : a)));
       toast.success("Aktivitas diperbarui");
+      await loadActivities(page, search);
     } else {
-      const { data, error } = await supabase.from("activities").insert(payload).select().single();
+      const { error } = await supabase.from("activities").insert(payload);
       if (error) {
         toast.error("Gagal menambah: " + error.message);
         return;
       }
-      setActivities((prev) => [...prev, data as Activity]);
       toast.success("Aktivitas ditambahkan");
+      await loadActivities(1, search);
     }
     setOpen(false);
   }
@@ -312,7 +344,7 @@ export function ActivitiesClient({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((a) => (
+              {activities.map((a) => (
                 <TableRow key={a.id}>
                   <TableCell className="font-medium">{a.name}</TableCell>
                   <TableCell>{a.category ?? "-"}</TableCell>
@@ -332,7 +364,7 @@ export function ActivitiesClient({
                   )}
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {activities.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={isAdmin ? 6 : 5} className="text-center text-muted-ink">
                     Tidak ada data.
@@ -342,6 +374,31 @@ export function ActivitiesClient({
             </TableBody>
           </Table>
         </div>
+        {totalCount > 0 && (
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted-ink">
+            <p>
+              Halaman {page} dari {totalPages} ({totalCount} aktivitas)
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => goToPage(page - 1)}
+              >
+                Sebelumnya
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page >= totalPages}
+                onClick={() => goToPage(page + 1)}
+              >
+                Berikutnya
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );

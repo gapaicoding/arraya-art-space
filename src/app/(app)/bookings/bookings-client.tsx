@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -105,37 +105,81 @@ const schema = z
 
 type FormValues = z.infer<typeof schema>;
 
+export const PAGE_SIZE = 20;
+
 export function BookingsClient({
   initialBookings,
+  initialCount,
   areas,
   organizers,
   activities,
 }: {
   initialBookings: BookingWithSchedule[];
+  initialCount: number;
   areas: Area[];
   organizers: Organizer[];
   activities: Activity[];
 }) {
   const [bookings, setBookings] = useState<BookingWithSchedule[]>(initialBookings);
+  const [totalCount, setTotalCount] = useState(initialCount);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>(ALL);
+  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState<BookingWithSchedule | null>(null);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const filtered = useMemo(
-    () =>
-      bookings.filter((b) => {
-        const matchesStatus = statusFilter === ALL || b.status === statusFilter;
-        const q = search.toLowerCase();
-        const matchesSearch =
-          !q ||
-          b.customer_organizer_name.toLowerCase().includes(q) ||
-          b.booking_number.toLowerCase().includes(q) ||
-          (b.schedules?.areas?.name ?? "").toLowerCase().includes(q);
-        return matchesStatus && matchesSearch;
-      }),
-    [bookings, search, statusFilter],
-  );
+  // Search and status filter are both server-side (with pagination) so the
+  // whole bookings table never has to load into the browser at once. Note:
+  // unlike before, search no longer matches against the joined area name
+  // (that requires a fragile cross-table filter) — only booking number and
+  // customer/organizer name.
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(
+      () => loadBookings(1, search, statusFilter),
+      search === "" ? 0 : 300,
+    );
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, statusFilter]);
+
+  async function loadBookings(targetPage: number, searchValue: string, status: string) {
+    const supabase = createClient();
+    const from = (targetPage - 1) * PAGE_SIZE;
+    let query = supabase
+      .from("bookings")
+      .select("*, schedules(area_id, date, start_at, end_at, status, areas(name, code))", {
+        count: "exact",
+      });
+    if (status !== ALL) {
+      query = query.eq("status", status);
+    }
+    if (searchValue) {
+      query = query.or(
+        `customer_organizer_name.ilike.%${searchValue}%,booking_number.ilike.%${searchValue}%`,
+      );
+    }
+    const { data, count, error } = await query
+      .order("created_at", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      toast.error("Gagal memuat data: " + error.message);
+      return;
+    }
+    setBookings((data as any) ?? []);
+    setTotalCount(count ?? 0);
+    setPage(targetPage);
+  }
+
+  function goToPage(targetPage: number) {
+    if (targetPage < 1 || targetPage > totalPages) return;
+    loadBookings(targetPage, search, statusFilter);
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -171,15 +215,6 @@ export function BookingsClient({
     setOpen(true);
   }
 
-  async function refreshBookings() {
-    const supabase = createClient();
-    const { data } = await supabase
-      .from("bookings")
-      .select("*, schedules(area_id, date, start_at, end_at, status, areas(name, code))")
-      .order("created_at", { ascending: false });
-    setBookings((data as any) ?? []);
-  }
-
   async function onSubmit(values: FormValues) {
     const area = areas.find((a) => a.id === values.area_id);
     if (area && values.participant_count && values.participant_count > area.capacity) {
@@ -213,7 +248,7 @@ export function BookingsClient({
 
     toast.success("Booking berhasil dibuat");
     setOpen(false);
-    refreshBookings();
+    loadBookings(1, search, statusFilter);
   }
 
   async function changeStatus(booking: BookingWithSchedule, status: BookingStatus) {
@@ -234,7 +269,7 @@ export function BookingsClient({
       toast.success("Status booking diperbarui");
     }
     setDetail(null);
-    refreshBookings();
+    loadBookings(page, search, statusFilter);
   }
 
   function mapBookingError(error: { code?: string; message?: string }) {
@@ -473,7 +508,7 @@ export function BookingsClient({
       <div className="glass rounded-[22px] p-4">
         <div className="flex flex-wrap items-center gap-3">
           <Input
-            placeholder="Cari nama, kode booking, atau area..."
+            placeholder="Cari nama customer/organizer atau no. booking..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="max-w-sm"
@@ -507,7 +542,7 @@ export function BookingsClient({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((b) => (
+              {bookings.map((b) => (
                 <TableRow key={b.id}>
                   <TableCell className="font-medium">{b.booking_number}</TableCell>
                   <TableCell>{b.customer_organizer_name}</TableCell>
@@ -533,7 +568,7 @@ export function BookingsClient({
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {bookings.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-ink">
                     Tidak ada booking.
@@ -543,6 +578,31 @@ export function BookingsClient({
             </TableBody>
           </Table>
         </div>
+        {totalCount > 0 && (
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted-ink">
+            <p>
+              Halaman {page} dari {totalPages} ({totalCount} booking)
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => goToPage(page - 1)}
+              >
+                Sebelumnya
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page >= totalPages}
+                onClick={() => goToPage(page + 1)}
+              >
+                Berikutnya
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Dialog open={!!detail} onOpenChange={(v) => !v && setDetail(null)}>

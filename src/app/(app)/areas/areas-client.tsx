@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,22 +55,61 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-export function AreasClient({ initialAreas }: { initialAreas: Area[] }) {
+export const PAGE_SIZE = 20;
+
+export function AreasClient({
+  initialAreas,
+  initialCount,
+}: {
+  initialAreas: Area[];
+  initialCount: number;
+}) {
   const { isAdmin } = useAuth();
   const [areas, setAreas] = useState(initialAreas);
+  const [totalCount, setTotalCount] = useState(initialCount);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Area | null>(null);
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
-  const filtered = useMemo(
-    () =>
-      areas.filter(
-        (a) =>
-          a.name.toLowerCase().includes(search.toLowerCase()) ||
-          a.code.toLowerCase().includes(search.toLowerCase()),
-      ),
-    [areas, search],
-  );
+  // Search and pagination are both server-side (via .range()/.ilike()) so
+  // large datasets never get loaded into the browser all at once. Debounce
+  // the search input so we don't fire a query on every keystroke.
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => loadAreas(1, search), search === "" ? 0 : 300);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
+
+  async function loadAreas(targetPage: number, searchValue: string) {
+    const supabase = createClient();
+    const from = (targetPage - 1) * PAGE_SIZE;
+    let query = supabase.from("areas").select("*", { count: "exact" });
+    if (searchValue) {
+      query = query.or(`name.ilike.%${searchValue}%,code.ilike.%${searchValue}%`);
+    }
+    const { data, count, error } = await query
+      .order("name", { ascending: true })
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) {
+      toast.error("Gagal memuat data: " + error.message);
+      return;
+    }
+    setAreas(data ?? []);
+    setTotalCount(count ?? 0);
+    setPage(targetPage);
+  }
+
+  function goToPage(targetPage: number) {
+    if (targetPage < 1 || targetPage > totalPages) return;
+    loadAreas(targetPage, search);
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -106,26 +145,21 @@ export function AreasClient({ initialAreas }: { initialAreas: Area[] }) {
   async function onSubmit(values: FormValues) {
     const supabase = createClient();
     if (editing) {
-      const { data, error } = await supabase
-        .from("areas")
-        .update({ ...values })
-        .eq("id", editing.id)
-        .select()
-        .single();
+      const { error } = await supabase.from("areas").update({ ...values }).eq("id", editing.id);
       if (error) {
         toast.error("Gagal menyimpan: " + error.message);
         return;
       }
-      setAreas((prev) => prev.map((a) => (a.id === editing.id ? (data as Area) : a)));
       toast.success("Area diperbarui");
+      await loadAreas(page, search);
     } else {
-      const { data, error } = await supabase.from("areas").insert(values).select().single();
+      const { error } = await supabase.from("areas").insert(values);
       if (error) {
         toast.error("Gagal menambah: " + error.message);
         return;
       }
-      setAreas((prev) => [...prev, data as Area]);
       toast.success("Area ditambahkan");
+      await loadAreas(1, search);
     }
     setOpen(false);
   }
@@ -133,17 +167,12 @@ export function AreasClient({ initialAreas }: { initialAreas: Area[] }) {
   async function toggleStatus(area: Area) {
     const supabase = createClient();
     const next = area.status === "active" ? "inactive" : "active";
-    const { data, error } = await supabase
-      .from("areas")
-      .update({ status: next })
-      .eq("id", area.id)
-      .select()
-      .single();
+    const { error } = await supabase.from("areas").update({ status: next }).eq("id", area.id);
     if (error) {
       toast.error("Gagal mengubah status: " + error.message);
       return;
     }
-    setAreas((prev) => prev.map((a) => (a.id === area.id ? (data as Area) : a)));
+    await loadAreas(page, search);
   }
 
   return (
@@ -278,7 +307,7 @@ export function AreasClient({ initialAreas }: { initialAreas: Area[] }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((area) => (
+              {areas.map((area) => (
                 <TableRow key={area.id}>
                   <TableCell className="font-medium">{area.name}</TableCell>
                   <TableCell>{area.code}</TableCell>
@@ -303,7 +332,7 @@ export function AreasClient({ initialAreas }: { initialAreas: Area[] }) {
                   )}
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {areas.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={isAdmin ? 6 : 5} className="text-center text-muted-ink">
                     Tidak ada data.
@@ -313,6 +342,31 @@ export function AreasClient({ initialAreas }: { initialAreas: Area[] }) {
             </TableBody>
           </Table>
         </div>
+        {totalCount > 0 && (
+          <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted-ink">
+            <p>
+              Halaman {page} dari {totalPages} ({totalCount} area)
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page <= 1}
+                onClick={() => goToPage(page - 1)}
+              >
+                Sebelumnya
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={page >= totalPages}
+                onClick={() => goToPage(page + 1)}
+              >
+                Berikutnya
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </AppShell>
   );
