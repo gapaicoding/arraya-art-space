@@ -83,12 +83,18 @@ export function DashboardClient({
       </div>
 
       {conflicts.length > 0 && (
-        <div className="glass rounded-[22px] border border-amber-300 bg-amber-50/60 p-5">
-          <p className="font-semibold text-amber-900">⚠️ Peringatan Konflik Jadwal</p>
-          <p className="mt-1 text-sm text-amber-800">
+        <div className="glass rounded-[22px] border-2 border-destructive bg-destructive/10 p-5">
+          <p className="font-semibold text-destructive">🚨 Peringatan Konflik Jadwal</p>
+          <p className="mt-1 text-sm text-destructive/90">
             Ditemukan {conflicts.length} pasangan jadwal yang bertabrakan pada area yang sama
-            hari ini. Segera periksa dan sesuaikan di halaman Jadwal.
+            hari ini. Ini seharusnya tidak pernah terjadi — segera periksa dan sesuaikan di
+            halaman Jadwal.
           </p>
+          <Link href="/schedule" className="mt-3 inline-block">
+            <Button size="sm" variant="destructive">
+              Buka Halaman Jadwal
+            </Button>
+          </Link>
         </div>
       )}
 

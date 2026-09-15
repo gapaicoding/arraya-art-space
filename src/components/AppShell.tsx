@@ -3,10 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { logoutAction } from "@/app/(app)/actions";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
+import { computeScheduleConflicts } from "@/lib/conflicts";
+import { formatDate } from "@/lib/format";
 
 const nav = [
   { to: "/", label: "Dashboard", glyph: "▦" },
@@ -45,6 +48,24 @@ export function AppShell({
     .join("")
     .toUpperCase();
 
+  // Surface today's schedule conflicts (should never happen — the DB
+  // exclusion constraint prevents them — but if it ever does, this makes
+  // it visible from every page via a badge on "Dashboard", not just when
+  // someone happens to open the dashboard itself).
+  const [conflictCount, setConflictCount] = useState(0);
+  useEffect(() => {
+    const supabase = createClient();
+    const today = formatDate(new Date(), "yyyy-MM-dd");
+    supabase
+      .from("schedules")
+      .select("id, area_id, start_at, end_at")
+      .eq("date", today)
+      .neq("status", "cancelled")
+      .then(({ data }) => {
+        if (data) setConflictCount(computeScheduleConflicts(data).length);
+      });
+  }, []);
+
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden font-body text-ink">
       <div className="pointer-events-none fixed inset-0 -z-30 bg-[linear-gradient(160deg,oklch(0.97_0.02_240)_0%,oklch(0.95_0.02_265)_45%,oklch(0.95_0.03_300)_100%)]" />
@@ -73,17 +94,23 @@ export function AppShell({
           <nav className="mt-8 flex flex-col gap-1">
             {nav.map((item) => {
               const active = item.to === path;
+              const showBadge = item.to === "/" && conflictCount > 0;
               return (
                 <Link
                   key={item.to}
                   href={item.to}
                   className={
                     active
-                      ? "rounded-xl bg-frost/70 px-4 py-2.5 text-sm font-semibold text-ink shadow-sm"
-                      : "rounded-xl px-4 py-2.5 text-sm font-medium text-muted-ink transition-colors hover:bg-frost/40"
+                      ? "flex items-center justify-between rounded-xl bg-frost/70 px-4 py-2.5 text-sm font-semibold text-ink shadow-sm"
+                      : "flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium text-muted-ink transition-colors hover:bg-frost/40"
                   }
                 >
                   {item.label}
+                  {showBadge && (
+                    <span className="grid size-5 place-items-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                      {conflictCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}
@@ -122,6 +149,7 @@ export function AppShell({
       <nav className="glass-strong fixed inset-x-3 bottom-3 z-20 flex items-center justify-around rounded-2xl px-2 py-2 lg:hidden">
         {mobileNav.map((item) => {
           const active = item.to === "/more" ? path.startsWith("/more") || path.startsWith("/areas") || path.startsWith("/activities") || path.startsWith("/organizers") || path.startsWith("/settings") : item.to === path;
+          const showBadge = item.to === "/" && conflictCount > 0;
           return (
             <Link
               key={item.to}
@@ -129,10 +157,15 @@ export function AppShell({
               aria-label={item.label}
               className={
                 active
-                  ? "flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl bg-frost/70 px-4 py-1.5 text-ink shadow-sm"
-                  : "flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl px-4 py-1.5 text-faint-ink"
+                  ? "relative flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl bg-frost/70 px-4 py-1.5 text-ink shadow-sm"
+                  : "relative flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-xl px-4 py-1.5 text-faint-ink"
               }
             >
+              {showBadge && (
+                <span className="absolute right-1 top-0.5 grid size-4 place-items-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground">
+                  {conflictCount}
+                </span>
+              )}
               <span className="text-lg leading-none">{item.glyph}</span>
               <span className="text-[10px] font-medium leading-none">{item.label}</span>
             </Link>

@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { logError } from "@/lib/logger";
+import { computeScheduleConflicts } from "@/lib/conflicts";
 import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage() {
@@ -54,24 +55,7 @@ export default async function DashboardPage() {
   // Conflict detection: overlapping active schedules in the same area today.
   // This should never happen thanks to the DB exclusion constraint, but is
   // surfaced here as an operational sanity check.
-  const conflicts: { a: any; b: any }[] = [];
-  const byArea = new Map<string, any[]>();
-  for (const s of schedulesToday) {
-    const list = byArea.get((s as any).area_id) ?? [];
-    list.push(s);
-    byArea.set((s as any).area_id, list);
-  }
-  for (const list of byArea.values()) {
-    for (let i = 0; i < list.length; i++) {
-      for (let j = i + 1; j < list.length; j++) {
-        const a = list[i];
-        const b = list[j];
-        if (new Date(a.start_at) < new Date(b.end_at) && new Date(b.start_at) < new Date(a.end_at)) {
-          conflicts.push({ a, b });
-        }
-      }
-    }
-  }
+  const conflicts = computeScheduleConflicts(schedulesToday as any);
 
   return (
     <DashboardClient
