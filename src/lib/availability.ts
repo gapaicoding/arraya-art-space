@@ -34,8 +34,10 @@ function scheduleTypeToStatus(type: Schedule["type"]): AvailabilityStatus {
  */
 export function buildHourSlots(openTime: string, closeTime: string): string[] {
   const slots: string[] = [];
-  const base = parse(openTime, "HH:mm", new Date(0));
-  const end = parse(closeTime, "HH:mm", new Date(0));
+  // Postgres `time` columns come back from Supabase as "HH:mm:ss" — normalize
+  // to "HH:mm" before parsing, otherwise date-fns produces an Invalid Date.
+  const base = parse(openTime.slice(0, 5), "HH:mm", new Date(0));
+  const end = parse(closeTime.slice(0, 5), "HH:mm", new Date(0));
   let cursor = base;
   while (isBefore(cursor, end)) {
     slots.push(format(cursor, "HH:mm"));

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -136,7 +136,13 @@ export function ScheduleClient({
 
   const activeAreas = useMemo(() => areas.filter((a) => a.status === "active"), [areas]);
 
+  // Guards against out-of-order responses: if the date changes again before
+  // an in-flight fetch for an older date resolves, that stale response must
+  // not be allowed to overwrite the newer one once it lands.
+  const latestRequestedDate = useRef(initialDate);
+
   async function loadSchedules(forDate: string) {
+    latestRequestedDate.current = forDate;
     setLoading(true);
     const supabase = createClient();
     const { data, error } = await supabase
@@ -144,6 +150,7 @@ export function ScheduleClient({
       .select("*, areas(name, code), activities(name), organizers(name)")
       .eq("date", forDate)
       .order("start_at", { ascending: true });
+    if (forDate !== latestRequestedDate.current) return;
     setLoading(false);
     if (error) {
       toast.error("Gagal memuat jadwal: " + error.message);
@@ -215,10 +222,14 @@ export function ScheduleClient({
       toast.error(`Arayya tutup pada hari ${DAY_NAMES_ID[new Date(`${values.date}T00:00:00`).getDay()]}.`);
       return;
     }
-    if (values.start_time < bh.open_time || values.end_time > bh.close_time) {
-      toast.error(
-        `Jadwal harus berada dalam jam operasional (${bh.open_time}–${bh.close_time}).`,
-      );
+    // bh.open_time/close_time come from Postgres as "HH:mm:ss"; normalize to
+    // "HH:mm" so the comparison against the form's "HH:mm" values is correct
+    // (otherwise a schedule starting exactly at opening time is wrongly
+    // rejected, since "09:00" < "09:00:00" as strings).
+    const openHm = bh.open_time.slice(0, 5);
+    const closeHm = bh.close_time.slice(0, 5);
+    if (values.start_time < openHm || values.end_time > closeHm) {
+      toast.error(`Jadwal harus berada dalam jam operasional (${openHm}–${closeHm}).`);
       return;
     }
 
