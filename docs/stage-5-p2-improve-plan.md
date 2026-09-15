@@ -95,7 +95,9 @@ PRD §7.2 meminta dashboard punya "Alert jika terdapat konflik atau informasi op
 - Tidak menambah kompleksitas infrastruktur (tidak perlu push notification service, dsb) — tetap sesuai skala MVP.
 
 ### Hasil Aktual
-*(diisi setelah eksekusi)*
+**✅ Selesai.** Logic konflik diekstrak ke `src/lib/conflicts.ts` (`computeScheduleConflicts`) dengan 5 unit test baru. Ditambahkan badge merah jumlah konflik di nav "Dashboard" (sidebar desktop + bottom nav mobile), diambil client-side di `AppShell.tsx` supaya terlihat dari halaman manapun, bukan cuma saat dashboard dibuka. Alert box di dashboard sendiri diperkuat dari warna amber ke destructive (merah) plus tombol langsung ke halaman Jadwal.
+
+Diverifikasi: build lolos, 28/28 unit test (5 baru), 11/11 e2e, dan dites manual di browser — kondisi normal (0 konflik, karena DB exclusion constraint mencegah konflik nyata terjadi) tidak menampilkan badge dan tidak merusak layout.
 
 ---
 
