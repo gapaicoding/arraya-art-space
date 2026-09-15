@@ -1,4 +1,4 @@
-import { defineConfig } from "@playwright/test";
+import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "tests/e2e",
@@ -25,6 +25,14 @@ export default defineConfig({
     {
       name: "chromium",
       use: { browserName: "chromium" },
+    },
+    // WebKit approximates Safari (desktop + iOS use the same engine), the
+    // dominant mobile browser for this app's mobile-first target — a
+    // different rendering/JS engine than Chromium can surface bugs
+    // Chromium-only testing would never catch.
+    {
+      name: "webkit",
+      use: { ...devices["Desktop Safari"] },
     },
   ],
 });

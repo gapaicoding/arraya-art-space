@@ -152,6 +152,7 @@ export function OrganizersClient({
         return;
       }
       toast.success("Organizer diperbarui");
+      setOpen(false);
       await loadOrganizers(page, search);
     } else {
       const { error } = await supabase.from("organizers").insert(payload);
@@ -160,9 +161,9 @@ export function OrganizersClient({
         return;
       }
       toast.success("Organizer ditambahkan");
+      setOpen(false);
       await loadOrganizers(1, search);
     }
-    setOpen(false);
   }
 
   return (

@@ -169,6 +169,7 @@ export function ActivitiesClient({
         return;
       }
       toast.success("Aktivitas diperbarui");
+      setOpen(false);
       await loadActivities(page, search);
     } else {
       const { error } = await supabase.from("activities").insert(payload);
@@ -177,9 +178,9 @@ export function ActivitiesClient({
         return;
       }
       toast.success("Aktivitas ditambahkan");
+      setOpen(false);
       await loadActivities(1, search);
     }
-    setOpen(false);
   }
 
   return (

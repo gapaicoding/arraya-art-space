@@ -151,6 +151,7 @@ export function AreasClient({
         return;
       }
       toast.success("Area diperbarui");
+      setOpen(false);
       await loadAreas(page, search);
     } else {
       const { error } = await supabase.from("areas").insert(values);
@@ -159,9 +160,9 @@ export function AreasClient({
         return;
       }
       toast.success("Area ditambahkan");
+      setOpen(false);
       await loadAreas(1, search);
     }
-    setOpen(false);
   }
 
   async function toggleStatus(area: Area) {

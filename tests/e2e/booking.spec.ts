@@ -72,7 +72,13 @@ test.describe("Booking flow", () => {
     await expect(page.getByText("Jumlah peserta melebihi kapasitas area (2).")).toBeVisible({
       timeout: 10_000,
     });
-    await page.keyboard.press("Escape");
+    // Escape has been observed to not reliably close a Radix Dialog in
+    // WebKit — click the explicit close button instead. A short wait first
+    // avoids WebKit's click landing during the dialog's open animation,
+    // when it can be visually/a11y "stable" but not yet accepting clicks.
+    await page.waitForTimeout(300);
+    await dialog.getByRole("button", { name: "Close" }).click();
+    await expect(dialog).toBeHidden();
 
     // Valid booking within capacity.
     await openForm();

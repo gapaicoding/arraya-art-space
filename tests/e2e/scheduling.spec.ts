@@ -81,7 +81,14 @@ test.describe("Scheduling & conflict rules", () => {
     await expect(page.getByText("Jadwal bertabrakan dengan jadwal lain di area ini.")).toBeVisible({
       timeout: 10_000,
     });
-    await page.keyboard.press("Escape");
+    // Escape has been observed to not reliably close a Radix Dialog in
+    // WebKit — click the explicit close button instead. A short wait first
+    // avoids WebKit's click landing during the dialog's open animation,
+    // when it can be visually/a11y "stable" but not yet accepting clicks.
+    await page.waitForTimeout(300);
+    const conflictDialog = page.locator('[role="dialog"]');
+    await conflictDialog.getByRole("button", { name: "Close" }).click();
+    await expect(conflictDialog).toBeHidden();
 
     const supabase = adminClient();
     const { data: schedulesAfterConflict } = await supabase

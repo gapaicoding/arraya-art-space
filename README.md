@@ -87,6 +87,31 @@ the code level; see "Deployment" below for the manual steps still required.
      `E2E_ENABLED` = `true`.
   Until both are set, the `e2e` job is skipped (shows as green/skipped, not
   failing) so CI stays usable without it.
+  This job runs Chromium only (`bun run test:e2e`) — see "Browser coverage"
+  below for why WebKit isn't included here yet.
+
+## Browser coverage
+
+`playwright.config.ts` defines two projects, Chromium and WebKit (which
+approximates Safari — the dominant mobile browser for this mobile-first
+app). Three scripts:
+- `bun run test:e2e` — Chromium only. This is what CI runs.
+- `bun run test:e2e:webkit` — WebKit only.
+- `bun run test:e2e:all` — both.
+
+**Known limitation:** as of Stage 5 P2.3, 8/11 specs pass on WebKit; the
+other 3 (`booking.spec.ts`, `scheduling.spec.ts`, `availability.spec.ts`)
+fail on a WebKit-specific timing issue where a click on a Radix Dialog's
+close button (or a button that opens one) intermittently doesn't register
+during the dialog's open/close animation — a Playwright+WebKit+Radix
+interaction quirk, not a bug in the app itself (manually verified working
+correctly in production). Two *real* cross-browser fixes came out of this
+investigation and apply everywhere: `tests/e2e/helpers.ts`'s login no longer
+uses a plain `.fill()` on the email field (WebKit was silently no-op'ing
+it), and the master-data create/edit forms now close their dialog *before*
+reloading the list instead of after, so a slow/failed reload can't leave
+the dialog stuck open. WebKit is intentionally excluded from the CI gate
+until the remaining timing issue is resolved, to avoid flaking builds red.
 
 ---
 
