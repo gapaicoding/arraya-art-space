@@ -1,6 +1,6 @@
 # Stage 5 — P2 Improvement Plan (Kualitas & Skala, Tidak Mendesak)
 
-**Status:** Sedang dieksekusi (urutan: P2.1 → P2.3 → P2.4 → P2.2), atas instruksi user.
+**Status:** ✅ Selesai (urutan eksekusi: P2.1 → P2.3 → P2.4 → P2.2), atas instruksi user. P2.3 selesai dengan 1 known limitation terdokumentasi (lihat detail di section masing-masing).
 **Sumber:** Assessment P0/P1/P2 sebelumnya, tindak lanjut dari `docs/stage-5-p1-improve-plan.md` yang sudah selesai (date-in-URL, CI/CD, logging minimal; forgot-password dibangun lalu dihapus karena di luar scope).
 
 Dokumen ini merinci 4 item P2 — peningkatan kualitas/skala yang tidak mendesak/blocking, berbeda dengan P0 (blocker) dan P1 (penting jangka pendek). Format: **Plan → Aksi → Hasil yang Diharapkan**, diisi hasil aktual setelah eksekusi (kalau/ketika disetujui).
@@ -48,6 +48,13 @@ Test coverage sejauh ini: unit test murni untuk `src/lib/*.ts` (availability, fo
 - `bun run test` tetap satu perintah yang menjalankan semuanya (unit + component).
 
 ### Hasil Aktual
+**✅ Selesai — dengan 1 trade-off sadar.** Vitest diperluas dukung jsdom + React Testing Library (environment per-file lewat docblock `@vitest-environment jsdom`, supaya test lib murni tetap jalan di "node"). Satu component render test asli (`StatCard` dari dashboard) untuk memverifikasi setup-nya benar berfungsi.
+
+**Nilai utama** justru dari eksekusi item #1 di atas: schema zod form Schedule dan Booking diekstrak dari komponen client ke `src/lib/schedule-validation.ts` dan `src/lib/booking-validation.ts` (komponen tinggal import, tidak ada perubahan perilaku), plus fungsi `exceedsAreaCapacity()` untuk cek kapasitas booking dipisah jadi function murni. Ini menguji tepat logic yang disebut di plan (setiap cabang `refine()`, nilai batas) — 18 test baru — **tanpa perlu mounting komponen penuh** (yang butuh mocking Supabase client, Next router, dan auth context, jauh lebih berat untuk nilai yang didapat).
+
+**Trade-off yang didokumentasikan:** full RTL component mounting untuk `ScheduleClient`/`BookingsClient` secara utuh **tidak** dikerjakan — dinilai terlalu mahal (banyak mocking) dibanding e2e yang sudah mengcover jalur itu end-to-end dan sekarang unit test schema yang mengcover validasinya. Kalau ke depan butuh lebih dalam, pola yang sudah ada (`vitest.setup.ts` + docblock jsdom) siap dipakai.
+
+Diverifikasi: 46/46 unit+component test lulus, build lolos, 11/11 e2e (Chromium) tetap lulus tanpa perubahan.
 *(diisi setelah eksekusi)*
 
 ---
