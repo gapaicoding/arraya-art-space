@@ -1,6 +1,6 @@
 # Stage 5 — P2 Improvement Plan (Kualitas & Skala, Tidak Mendesak)
 
-**Status:** Draft — **menunggu instruksi eksekusi dari user.**
+**Status:** Sedang dieksekusi (urutan: P2.1 → P2.3 → P2.4 → P2.2), atas instruksi user.
 **Sumber:** Assessment P0/P1/P2 sebelumnya, tindak lanjut dari `docs/stage-5-p1-improve-plan.md` yang sudah selesai (date-in-URL, CI/CD, logging minimal; forgot-password dibangun lalu dihapus karena di luar scope).
 
 Dokumen ini merinci 4 item P2 — peningkatan kualitas/skala yang tidak mendesak/blocking, berbeda dengan P0 (blocker) dan P1 (penting jangka pendek). Format: **Plan → Aksi → Hasil yang Diharapkan**, diisi hasil aktual setelah eksekusi (kalau/ketika disetujui).
@@ -24,7 +24,12 @@ Halaman list Area, Activity, Organizer, dan Booking saat ini mengambil **semua b
 - Build + seluruh test (unit & e2e) tetap lulus.
 
 ### Hasil Aktual
-*(diisi setelah eksekusi)*
+**✅ Selesai.** Diimplementasikan untuk Area, Activity, Organizer, dan Booking:
+- Query Supabase pakai `.range()` (20 baris/halaman) + `count: "exact"`.
+- Search box (dan status filter khusus Booking) di-debounce 300ms, query server-side (`.ilike()`/`.or()`), bukan filter di memori atas seluruh data.
+- Mutasi (create/edit/toggle status/cancel) reload halaman aktif alih-alih patch array lokal — lebih sederhana dan otomatis menjaga `totalCount` akurat.
+- **Perubahan perilaku kecil**: pencarian Booking tidak lagi mencocokkan nama area (butuh cross-table filter yang rapuh) — hanya nomor booking & nama customer/organizer. Placeholder teks disesuaikan.
+- Diverifikasi: build lolos, 23/23 unit test, 11/11 e2e tetap lulus tanpa perubahan pada test itu sendiri, dan dites manual di browser (pagination control tampil benar, search "Room" → ketemu, search kata tidak ada → "Tidak ada data.").
 
 ---
 
