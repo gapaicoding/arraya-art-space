@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,33 +20,33 @@ import {
 
 const schema = z.object({
   email: z.string().email("Email tidak valid"),
-  password: z.string().min(6, "Password minimal 6 karakter"),
 });
 
 type FormValues = z.infer<typeof schema>;
 
-export default function LoginPage() {
-  const router = useRouter();
+export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: "" },
   });
 
   async function onSubmit(values: FormValues) {
     setLoading(true);
     setError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword(values);
+    const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
     setLoading(false);
     if (error) {
-      setError("Email atau password salah.");
+      setError("Gagal mengirim email reset. Coba lagi beberapa saat.");
       return;
     }
-    router.push("/");
-    router.refresh();
+    setSent(true);
   }
 
   return (
@@ -74,51 +73,45 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <h1 className="mb-1 font-display text-xl font-bold">Masuk</h1>
+        <h1 className="mb-1 font-display text-xl font-bold">Lupa Password</h1>
         <p className="mb-6 text-sm text-muted-ink">
-          Masuk untuk mengelola jadwal dan booking Arayya.
+          Masukkan email Anda, kami akan kirim link untuk mengatur ulang password.
         </p>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="nama@arayya.id" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Memproses..." : "Masuk"}
-            </Button>
-          </form>
-        </Form>
+        {sent ? (
+          <p className="rounded-xl bg-mint/40 p-4 text-sm text-emerald-800">
+            Email reset password sudah dikirim (jika email tersebut terdaftar). Cek
+            inbox Anda dan ikuti link di dalamnya.
+          </p>
+        ) : (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="nama@arayya.id" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {error && <p className="text-sm text-destructive">{error}</p>}
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Mengirim..." : "Kirim Link Reset"}
+              </Button>
+            </form>
+          </Form>
+        )}
 
         <Link
-          href="/forgot-password"
+          href="/login"
           className="mt-4 block text-center text-sm text-muted-ink underline-offset-2 hover:underline"
         >
-          Lupa password?
+          Kembali ke halaman masuk
         </Link>
       </div>
     </div>
