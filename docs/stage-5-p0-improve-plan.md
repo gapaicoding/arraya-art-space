@@ -80,6 +80,22 @@ Ini **tidak bisa saya eksekusi sendiri** — saya tidak punya akses ke perangkat
 - Checklist UAT tersedia dan jelas (dilampirkan di dokumen ini setelah dibuat).
 - Status: **menunggu Anda menjalankan UAT** — bagian ini tidak bisa saya tandai selesai sendiri.
 
+### Simulasi Awal (Browser Viewport 390×844, bukan device fisik)
+
+Sebagai langkah awal sebelum UAT fisik, saya jalankan sebagian checklist lewat browser dengan viewport ukuran HP terhadap URL production (pakai 1 admin test sementara, sudah dihapus setelah selesai). Hasil:
+
+| Area yang dicek | Hasil |
+|---|---|
+| Halaman Login | ✅ Rapi, form & tombol proporsional |
+| Dashboard (termasuk scroll ke bawah) | ✅ Semua card terbaca, bottom nav tidak menutupi konten |
+| Menu "Lainnya" | ✅ List rapi, touch target besar |
+| Tab Availability (grid jam) | ✅ Wrap dengan baik, badge warna terbaca |
+| Dialog "+ Jadwal Baru" | ✅ Semua field terlihat/scrollable, tombol Simpan terjangkau |
+| Dialog "+ Booking Baru" | ✅ Scrollable, semua field terjangkau |
+| Tabel Daftar Jadwal / Master Area | ⚠️ Kolom "Status"/"Aksi" terpotong di lebar 390px, **butuh scroll horizontal** — sudah ada scrollbar dan berfungsi, tapi ini pola berulang di semua tabel (bukan blocker, tapi kurang ideal untuk mobile-first; lihat catatan di bawah) |
+
+**Catatan:** ini simulasi viewport di browser, BUKAN pengganti device fisik asli (tidak menangkap masalah nyata seperti keyboard virtual menutupi input, perilaku scroll native iOS Safari, atau touch gesture asli). Checklist di bawah tetap perlu dijalankan Anda di HP sungguhan untuk konfirmasi final.
+
 ### Checklist UAT Mobile
 
 URL: `https://arraya-art-space.vercel.app` — login pakai akun admin asli Anda.
