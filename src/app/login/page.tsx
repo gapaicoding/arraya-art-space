@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -113,13 +112,6 @@ export default function LoginPage() {
             </Button>
           </form>
         </Form>
-
-        <Link
-          href="/forgot-password"
-          className="mt-4 block text-center text-sm text-muted-ink underline-offset-2 hover:underline"
-        >
-          Lupa password?
-        </Link>
       </div>
     </div>
   );

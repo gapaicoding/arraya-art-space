@@ -71,9 +71,11 @@ Saat ini hanya ada halaman login (email+password), tidak ada jalan resmi kalau a
 - Tidak ada perubahan pada RLS/security model.
 
 ### Hasil Aktual
-**✅ Selesai.** Diuji lewat browser: form forgot-password memanggil `resetPasswordForEmail` tanpa error, halaman reset-password menampilkan pesan "link tidak valid" yang benar saat diakses tanpa sesi recovery. Build lolos, 23/23 unit test dan 11/11 e2e tetap lulus.
+**⚠️ Diimplementasikan, lalu dihapus kembali — di luar scope MVP.** Fitur sempat dibangun dan diverifikasi jalan (form forgot-password memanggil `resetPasswordForEmail` tanpa error, halaman reset-password menampilkan pesan "link tidak valid" yang benar tanpa sesi recovery, build & seluruh test tetap lulus).
 
-**Perlu tindakan Anda:** di Supabase Dashboard → Authentication → URL Configuration, tambahkan `https://arraya-art-space.vercel.app/reset-password` sebagai **Redirect URL** yang diizinkan — tanpa ini, link reset password dari email production tidak akan berfungsi (Supabase menolak redirect ke URL yang tidak terdaftar).
+Namun setelah didiskusikan: aplikasi ini **tidak punya self-service signup** (sesuai PRD — Non-Goals MVP, akun cuma dibuat Admin lewat Supabase Dashboard). Fitur forgot-password hanya berguna untuk user yang **sudah** punya akun tapi lupa password — bukan pengganti pendaftaran akun baru. Mengingat jumlah user masih sangat sedikit di tahap MVP ini dan reset manual lewat Supabase Dashboard oleh Admin masih sangat memadai, fitur ini diputuskan **di luar scope MVP** dan dihapus kembali (`src/app/forgot-password/`, `src/app/reset-password/`, link "Lupa password?" di `/login`, dan entry terkait di `middleware.ts` — semua dikembalikan seperti semula). Build & seluruh test tetap lulus setelah revert.
+
+**Catatan untuk ke depan:** kalau nanti dibutuhkan (misal jumlah staff sudah banyak dan reset manual oleh Admin jadi beban operasional), fitur ini bisa dibangun ulang — kode sebelumnya sudah terbukti jalan, tinggal diulang polanya.
 
 ---
 
