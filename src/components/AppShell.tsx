@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
@@ -54,9 +55,14 @@ export function AppShell({
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[1440px] gap-5 p-4 pb-24 lg:gap-6 lg:p-6 lg:pb-6">
         <aside className="glass hidden w-64 shrink-0 flex-col rounded-[26px] p-5 lg:flex">
           <div className="flex items-center gap-3">
-            <div className="gradient-brand grid size-10 place-items-center rounded-xl font-display text-lg font-bold text-frost shadow-lg shadow-brand/30">
-              A
-            </div>
+            <Image
+              src="/logo-arayya.jpg"
+              alt="Arayya Art & Space"
+              width={40}
+              height={40}
+              className="size-10 shrink-0 rounded-xl object-cover shadow-lg shadow-brand/30"
+              priority
+            />
             <div>
               <p className="font-display text-base font-bold leading-none">Arayya</p>
               <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-faint-ink">

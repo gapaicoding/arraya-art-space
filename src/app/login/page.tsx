@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -56,9 +57,14 @@ export default function LoginPage() {
 
       <div className="glass-strong relative z-10 w-full max-w-sm rounded-[26px] p-6">
         <div className="mb-6 flex items-center gap-3">
-          <div className="gradient-brand grid size-10 place-items-center rounded-xl font-display text-lg font-bold text-frost shadow-lg shadow-brand/30">
-            A
-          </div>
+          <Image
+            src="/logo-arayya.jpg"
+            alt="Arayya Art & Space"
+            width={40}
+            height={40}
+            className="size-10 shrink-0 rounded-xl object-cover shadow-lg shadow-brand/30"
+            priority
+          />
           <div>
             <p className="font-display text-base font-bold leading-none">Arayya</p>
             <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-faint-ink">
