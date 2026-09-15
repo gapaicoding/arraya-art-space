@@ -133,6 +133,17 @@
 @utility blob-b { animation: drift2 18s ease-in-out infinite; }
 @utility blob-c { animation: drift3 16s ease-in-out infinite; }
 
+/* Continuously animating a large blurred fixed-position element is expensive
+   to composite on mobile GPUs. Keep the blobs as static decoration on small
+   screens (and for anyone who's asked for reduced motion) instead. */
+@media (max-width: 768px), (prefers-reduced-motion: reduce) {
+  .blob-a,
+  .blob-b,
+  .blob-c {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     border-color: var(--color-border);
