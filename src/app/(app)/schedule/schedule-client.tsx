@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -126,8 +127,18 @@ export function ScheduleClient({
   initialDate: string;
   initialSchedules: ScheduleWithRelations[];
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [areas] = useState<Area[]>(initialAreas);
   const [date, setDate] = useState(initialDate);
+
+  // Keep the selected date in the URL (?date=YYYY-MM-DD) so reloading,
+  // sharing a link, or using browser back/forward preserves it instead of
+  // always bouncing back to today.
+  function handleDateChange(newDate: string) {
+    setDate(newDate);
+    router.replace(`${pathname}?date=${newDate}`, { scroll: false });
+  }
   const [schedules, setSchedules] = useState<ScheduleWithRelations[]>(initialSchedules);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -293,7 +304,7 @@ export function ScheduleClient({
     if (values.date === date) {
       loadSchedules(date);
     } else {
-      setDate(values.date);
+      handleDateChange(values.date);
     }
   }
 
@@ -516,7 +527,7 @@ export function ScheduleClient({
     >
       <div className="glass rounded-[22px] p-4">
         <div className="flex flex-wrap items-center gap-3">
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-44" />
+          <Input type="date" value={date} onChange={(e) => handleDateChange(e.target.value)} className="w-44" />
           <p className="text-sm text-muted-ink">{formatDateOnly(date)}</p>
         </div>
       </div>
