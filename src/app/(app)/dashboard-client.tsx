@@ -13,7 +13,7 @@ const TYPE_LABEL_ID: Record<string, string> = {
   blocked: "Blocked",
 };
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+export function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
     <div className="glass rounded-[22px] p-5">
       <p className="text-sm text-muted-ink">{label}</p>

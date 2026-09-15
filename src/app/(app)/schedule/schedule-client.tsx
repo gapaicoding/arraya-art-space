@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { scheduleFormSchema, SCHEDULE_NONE } from "@/lib/schedule-validation";
 import { toast } from "sonner";
 import { AppShell, PrimaryButton } from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/client";
@@ -68,7 +69,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const NONE = "__none__";
+const NONE = SCHEDULE_NONE;
 
 type ScheduleWithRelations = Schedule & {
   areas?: { name: string; code: string } | null;
@@ -76,26 +77,7 @@ type ScheduleWithRelations = Schedule & {
   organizers?: { name: string } | null;
 };
 
-const schema = z
-  .object({
-    date: z.string().min(1, "Tanggal wajib diisi"),
-    area_id: z.string().min(1, "Area wajib dipilih"),
-    type: z.enum(["internal_activity", "external_booking", "blocked"]),
-    activity_id: z.string().optional(),
-    organizer_id: z.string().optional(),
-    start_time: z.string().min(1, "Jam mulai wajib diisi"),
-    end_time: z.string().min(1, "Jam selesai wajib diisi"),
-    capacity: z.coerce.number().int().positive().optional().or(z.literal(undefined)),
-    notes: z.string().optional(),
-  })
-  .refine((v) => v.end_time > v.start_time, {
-    message: "Jam selesai harus setelah jam mulai",
-    path: ["end_time"],
-  })
-  .refine((v) => v.type !== "internal_activity" || (v.activity_id && v.activity_id !== NONE), {
-    message: "Aktivitas wajib dipilih untuk internal activity",
-    path: ["activity_id"],
-  });
+const schema = scheduleFormSchema;
 
 type FormValues = z.infer<typeof schema>;
 

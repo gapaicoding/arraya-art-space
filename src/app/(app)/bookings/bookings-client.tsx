@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
+import { bookingFormSchema, exceedsAreaCapacity } from "@/lib/booking-validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { AppShell, PrimaryButton } from "@/components/AppShell";
@@ -83,25 +84,7 @@ const STATUS_BADGE_VARIANT: Record<BookingStatus, "default" | "secondary" | "out
   completed: "secondary",
 };
 
-const schema = z
-  .object({
-    customer_organizer_name: z.string().min(1, "Nama customer/organizer wajib diisi"),
-    contact_person: z.string().optional(),
-    phone: z.string().optional(),
-    area_id: z.string().min(1, "Area wajib dipilih"),
-    date: z.string().min(1, "Tanggal wajib diisi"),
-    start_time: z.string().min(1, "Jam mulai wajib diisi"),
-    end_time: z.string().min(1, "Jam selesai wajib diisi"),
-    participant_count: z.coerce.number().int().positive().optional().or(z.literal(undefined)),
-    purpose: z.string().optional(),
-    activity_id: z.string().optional(),
-    organizer_id: z.string().optional(),
-    notes: z.string().optional(),
-  })
-  .refine((v) => v.end_time > v.start_time, {
-    message: "Jam selesai harus setelah jam mulai",
-    path: ["end_time"],
-  });
+const schema = bookingFormSchema;
 
 type FormValues = z.infer<typeof schema>;
 
@@ -217,7 +200,7 @@ export function BookingsClient({
 
   async function onSubmit(values: FormValues) {
     const area = areas.find((a) => a.id === values.area_id);
-    if (area && values.participant_count && values.participant_count > area.capacity) {
+    if (area && exceedsAreaCapacity(values.participant_count, area.capacity)) {
       toast.error(`Jumlah peserta melebihi kapasitas area (${area.capacity}).`);
       return;
     }
