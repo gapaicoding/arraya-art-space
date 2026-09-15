@@ -26,6 +26,9 @@ next-env.d.ts
 # Supabase CLI local cache
 supabase/.temp/
 
+# Playwright MCP debug session artifacts
+.playwright-mcp/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -36,3 +39,9 @@ supabase/.temp/
 *.njsproj
 *.sln
 *.sw?
+
+# Playwright E2E
+playwright-report/
+test-results/
+blob-report/
+.env.test
