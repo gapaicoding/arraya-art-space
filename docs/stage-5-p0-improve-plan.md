@@ -24,7 +24,7 @@ Dua commit baru (bug fix availability/race-condition + test suite) masih lokal, 
 - URL production bisa diakses dan menampilkan halaman login tanpa error.
 
 ### Hasil Aktual
-*(diisi setelah eksekusi)*
+**Ditunda** — user memilih push manual sendiri nanti, bukan dari sesi ini. P0.2 tetap bisa dijalankan karena production URL (`https://arraya-art-space.vercel.app`) sudah live dari deployment sebelumnya (RLS/database-level tidak tergantung commit frontend terbaru).
 
 ---
 
@@ -47,7 +47,22 @@ RLS sudah ditinjau by-code dan diuji lewat e2e terhadap Supabase project yang sa
 - Tidak ada sisa data/user test tertinggal di database setelah verifikasi.
 
 ### Hasil Aktual
-*(diisi setelah eksekusi)*
+**✅ Selesai — RLS terverifikasi menahan dengan benar di production live.**
+
+Dijalankan dengan user test `verify-staff@arayya.test` (role `staff`, dibuat via Supabase Admin API), login ke `https://arraya-art-space.vercel.app` sungguhan (bukan dev server):
+
+| Aksi | Diharapkan | Hasil |
+|---|---|---|
+| UI halaman Area sebagai staff | Read-only, tombol Aksi/Tambah tidak muncul | ✅ Sesuai — hanya kolom data, tanpa kolom Aksi |
+| INSERT langsung ke `areas` (bypass UI, pakai JWT staff) | Ditolak RLS | ✅ HTTP 403 `"new row violates row-level security policy for table areas"` |
+| UPDATE langsung ke `business_hours` | Ditolak RLS (0 baris berubah) | ✅ HTTP 200 tapi `[]` baris (dikonfirmasi `open_time` tidak berubah) |
+| INSERT langsung ke `activities` | Ditolak RLS | ✅ HTTP 403 |
+| INSERT langsung ke `organizers` | Ditolak RLS | ✅ HTTP 403 |
+| INSERT ke `schedules` (staff diizinkan) | Berhasil | ✅ HTTP 201 |
+
+**Kesimpulan:** RLS policy admin-only write untuk Area/Activity/Organizer/Business Hours benar-benar ditegakkan di level database production, bukan cuma disembunyikan di UI — percobaan bypass langsung lewat REST API (melewati UI sepenuhnya) tetap ditolak. Staff tetap bisa membuat Schedule sesuai matriks role PRD §14.
+
+**Cleanup:** user test dan 1 schedule test (`RLS_TEST_staff_schedule`) sudah dihapus. Terverifikasi tidak ada sisa data/user tertinggal.
 
 ---
 
@@ -65,8 +80,41 @@ Ini **tidak bisa saya eksekusi sendiri** — saya tidak punya akses ke perangkat
 - Checklist UAT tersedia dan jelas (dilampirkan di dokumen ini setelah dibuat).
 - Status: **menunggu Anda menjalankan UAT** — bagian ini tidak bisa saya tandai selesai sendiri.
 
+### Checklist UAT Mobile
+
+URL: `https://arraya-art-space.vercel.app` — login pakai akun admin asli Anda.
+Disarankan dites di **minimal 2 device**: 1 Android (Chrome) + 1 iPhone (Safari), karena browser engine beda dan e2e otomatis kita cuma cover Chromium.
+
+**Login & Navigasi**
+- [ ] Halaman login nyaman diisi di keyboard HP (input tidak tertutup keyboard, tombol "Masuk" mudah dijangkau jempol).
+- [ ] Setelah login, bottom navigation (Dashboard/Jadwal/Booking/Lainnya) muncul dan semua tombol mudah disentuh (tidak kepencet ganda/salah).
+- [ ] Menu "Lainnya" bisa dibuka dan berisi link ke Area/Aktivitas/Organizer/Pengaturan.
+
+**Dashboard**
+- [ ] Ringkasan (jadwal hari ini, area tersedia, booking hari ini) terbaca jelas tanpa perlu zoom.
+
+**Jadwal (Schedule)**
+- [ ] Ganti tanggal via date picker nyaman disentuh (bukan cuma bisa lewat keyboard).
+- [ ] Tab "Daftar Jadwal" dan "Availability" mudah dipindah.
+- [ ] Grid Availability (badge warna per jam) tidak terpotong/overflow di lebar HP.
+- [ ] Form "+ Jadwal Baru" — semua field (tanggal, area, jam, aktivitas) bisa diisi tanpa dialog terpotong di layar kecil.
+- [ ] Coba buat jadwal yang bentrok — pesan error muncul jelas & terbaca.
+
+**Booking**
+- [ ] Form "+ Booking Baru" nyaman diisi, dropdown Area/pilihan waktu tidak terpotong.
+- [ ] List booking bisa di-scroll dan status (Pending/Confirmed/dll) terbaca jelas.
+- [ ] Detail booking & tombol Batalkan mudah disentuh, dialog konfirmasi tidak terpotong.
+
+**Master Data (Admin)**
+- [ ] Tabel Area/Aktivitas/Organizer bisa di-scroll horizontal kalau kolom lebih lebar dari layar (tidak merusak layout halaman).
+- [ ] Form create/edit nyaman diisi di layar kecil.
+
+**Umum**
+- [ ] Tidak ada teks/tombol yang terpotong atau tumpang tindih di orientasi portrait.
+- [ ] Transisi antar halaman terasa responsif (tidak nge-lag berlebihan).
+
 ### Hasil Aktual
-*(diisi setelah Anda menjalankan UAT dan melaporkan hasilnya)*
+*(diisi setelah Anda menjalankan UAT dan melaporkan hasilnya — laporkan sebagai daftar checklist mana yang gagal beserta screenshot/deskripsi masalahnya, saya perbaiki di sesi berikutnya)*
 
 ---
 
