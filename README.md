@@ -32,31 +32,29 @@ the code level; see "Deployment" below for the manual steps still required.
 
 ## Deployment
 
-1. **Push to GitHub.** This project is not yet a git repository connected to
-   a remote. Initialize/commit locally, then push to
-   `https://github.com/gapaicoding/arayya-space-keeper.git`:
+1. **Push to GitHub.** The repo is connected to
+   `https://github.com/gapaicoding/arraya-art-space.git`:
    ```sh
-   git init
-   git remote add origin https://github.com/gapaicoding/arayya-space-keeper.git
-   git add .
-   git commit -m "Stage 0-5"
-   git push -u origin main
+   git push origin main
    ```
 2. **Import the repo in Vercel.** In the Vercel dashboard, "Add New… →
-   Project", select the `arayya-space-keeper` GitHub repo, and let Vercel
-   auto-detect the Next.js 14 App Router framework preset.
+   Project", select the `arraya-art-space` GitHub repo, and let Vercel
+   auto-detect the Next.js 14 App Router framework preset. Once imported,
+   every push to `main` auto-deploys.
 3. **Set environment variables in Vercel.** In the Vercel project's
    Settings → Environment Variables, add every variable listed in
    `.env.example` (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
-   and `SUPABASE_SERVICE_ROLE_KEY` if/when it becomes used) for the
-   Production (and Preview, if used) environment.
+   `SUPABASE_SERVICE_ROLE_KEY`) for the Production (and Preview, if used)
+   environment.
 4. **Run the SQL migrations in Supabase.** Open the Supabase Dashboard →
-   SQL Editor for your project and run, in order:
+   SQL Editor for your project (or use `supabase db push` with the CLI
+   linked to the project) and run, in order:
    - `supabase/migrations/0001_init.sql` (schema, RLS, triggers)
    - `supabase/migrations/0002_booking_rpc.sql` (create_booking / cancel_booking RPCs)
-   - `supabase/migrations/0003_rls_fixes.sql`, **only if present** (none was
-     needed as of Stage 5 — the existing RLS policies already match the
-     Admin/Staff role matrix in PRD §14).
+   - `supabase/migrations/0003_grants.sql` (table/sequence/function grants —
+     tables created via the SQL Editor don't get the standard Supabase
+     role grants automatically; without this, every query returns
+     "permission denied" even though RLS itself is correct)
    These can be run before or after the first Vercel deploy — the app will
    simply fail its Supabase queries until the schema exists.
 5. **Create the first admin user.** Sign up normally through the app's
@@ -69,6 +67,26 @@ the code level; see "Deployment" below for the manual steps still required.
    (`<user-id>` is the `auth.users.id` / `profiles.id` UUID for the account
    you just created — found in Authentication → Users, or via
    `select id, email from auth.users;`.)
+
+## CI
+
+`.github/workflows/ci.yml` runs on every push/PR to `main`:
+
+- **`unit-and-build`** — `bun run test` (Vitest) + `bun run build`, no
+  secrets required (build uses placeholder Supabase env vars since nothing
+  hits the network at build time). Runs automatically, nothing to set up.
+- **`e2e`** — the Playwright suite in `tests/e2e/`, which runs against a
+  **live** Supabase project and creates/deletes its own `E2E_TEST_`-prefixed
+  data and test users. Because of that blast radius, it's off by default and
+  only runs once you explicitly opt in:
+  1. Repo Settings → Secrets and variables → Actions → **Secrets**: add
+     `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+     `SUPABASE_SERVICE_ROLE_KEY` (ideally pointing at a dedicated
+     test/staging Supabase project rather than production).
+  2. Repo Settings → Secrets and variables → Actions → **Variables**: add
+     `E2E_ENABLED` = `true`.
+  Until both are set, the `e2e` job is skipped (shows as green/skipped, not
+  failing) so CI stays usable without it.
 
 ---
 
