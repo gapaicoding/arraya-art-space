@@ -24,7 +24,7 @@ Saat ini tanggal yang dipilih di halaman Jadwal (`/schedule`) hanya tersimpan di
 - Semua test unit + e2e yang sudah ada tetap lulus (terutama `scheduling.spec.ts`, `availability.spec.ts`, `booking.spec.ts` yang bergantung pada perilaku tanggal).
 
 ### Hasil Aktual
-*(diisi setelah eksekusi)*
+**✅ Selesai.** `schedule-client.tsx` dan `schedule/page.tsx` diubah: tanggal disinkronkan ke `?date=YYYY-MM-DD` via `router.replace` (tidak membanjiri history), server component membaca `searchParams.date` (divalidasi format) sebagai `initialDate`. Build lolos, 23/23 unit test dan 11/11 e2e tetap lulus tanpa perubahan pada test itu sendiri.
 
 ---
 
@@ -47,7 +47,11 @@ Test suite (unit + e2e) yang sudah dibangun di Stage 5 testing hanya bisa dijala
 - e2e job tersedia sebagai workflow tapi jelas didokumentasikan butuh secrets tambahan dari Anda untuk aktif penuh (karena menyentuh database Supabase live, tidak boleh auto-jalan tanpa kontrol eksplisit Anda atas credential mana yang dipakai).
 
 ### Hasil Aktual
-*(diisi setelah eksekusi)*
+**✅ Selesai.** `.github/workflows/ci.yml` dibuat dengan 2 job:
+- `unit-and-build` — jalan otomatis tanpa setup tambahan (unit test + build, pakai env var placeholder karena tidak ada network call saat build).
+- `e2e` — gated di belakang repository variable `E2E_ENABLED=true` + 3 secrets Supabase, supaya tidak menyentuh database live tanpa persetujuan eksplisit Anda.
+
+README diperbarui dengan bagian "CI" yang menjelaskan cara mengaktifkan job e2e. YAML sudah divalidasi (parse via js-yaml, sintaks benar). **Catatan:** job ini belum pernah benar-benar dijalankan oleh GitHub Actions (baru aktif begitu Anda push commit ke `main`) — perlu dikonfirmasi statusnya di tab Actions repo setelah push.
 
 ---
 
@@ -67,7 +71,9 @@ Saat ini hanya ada halaman login (email+password), tidak ada jalan resmi kalau a
 - Tidak ada perubahan pada RLS/security model.
 
 ### Hasil Aktual
-*(diisi setelah eksekusi)*
+**✅ Selesai.** Diuji lewat browser: form forgot-password memanggil `resetPasswordForEmail` tanpa error, halaman reset-password menampilkan pesan "link tidak valid" yang benar saat diakses tanpa sesi recovery. Build lolos, 23/23 unit test dan 11/11 e2e tetap lulus.
+
+**Perlu tindakan Anda:** di Supabase Dashboard → Authentication → URL Configuration, tambahkan `https://arraya-art-space.vercel.app/reset-password` sebagai **Redirect URL** yang diizinkan — tanpa ini, link reset password dari email production tidak akan berfungsi (Supabase menolak redirect ke URL yang tidak terdaftar).
 
 ---
 
@@ -81,11 +87,16 @@ Error boundary sudah ada dari Stage 5 (menampilkan halaman error yang ramah), ta
 1. Kalau Anda sudah/mau punya akun Sentry (gratis untuk skala kecil): beri saya DSN key-nya, saya integrasikan `@sentry/nextjs` ke project.
 2. Kalau belum mau pakai service eksternal dulu: saya bisa siapkan logging minimal (console.error terstruktur di server actions/error boundary) sebagai langkah awal murah, tanpa dependency eksternal — bukan pengganti monitoring sungguhan, tapi lebih baik dari tidak ada apa-apa.
 
+**Keputusan Anda: opsi 2 (logging minimal).**
+
 ### Hasil yang Diharapkan
-*(tergantung keputusan Anda — lihat Aksi di atas)*
+- Helper `logError()` terpusat, log JSON terstruktur (timestamp, scope, message, stack) ke `console.error`.
+- Dipasang di kedua error boundary (`error.tsx`, `(app)/error.tsx`) dan di semua 7 halaman server yang fetch data dari Supabase — sebelumnya error dari query itu diam-diam tertelan lewat fallback `?? []`.
 
 ### Hasil Aktual
-*(diisi setelah keputusan Anda & eksekusi)*
+**✅ Selesai.** `src/lib/logger.ts` dibuat dan dipasang di 2 error boundary + 7 server page (`areas`, `activities`, `organizers`, `business-hours`, `bookings`, `schedule`, dashboard). Build lolos, 23/23 unit test dan 11/11 e2e tetap lulus.
+
+**Keterbatasan yang didokumentasikan (bukan bug, sesuai ekspektasi opsi minimal):** error dari halaman server (Server Components) akan muncul di Vercel Runtime Logs — bisa dicek kapan saja. Error dari sisi client (kebanyakan operasi CRUD di app ini memang client-side lewat Supabase browser client) hanya muncul di console browser user saat error itu terjadi — tidak ada yang otomatis memberi tahu Anda/saya. Untuk visibility production yang sesungguhnya (notifikasi real-time saat ada error), tetap perlu upgrade ke layanan seperti Sentry di kemudian hari (opsi 1 di atas, kapan saja siap).
 
 ---
 
