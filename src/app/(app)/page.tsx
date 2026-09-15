@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
+import { logError } from "@/lib/logger";
 import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage() {
@@ -7,11 +8,11 @@ export default async function DashboardPage() {
   const today = formatDate(new Date(), "yyyy-MM-dd");
 
   const [
-    { count: areaCount },
-    { count: activeAreaCount },
-    { data: todaySchedules },
-    { data: todayBookings },
-    { data: upcomingSchedules },
+    { count: areaCount, error: areaCountError },
+    { count: activeAreaCount, error: activeAreaCountError },
+    { data: todaySchedules, error: todaySchedulesError },
+    { data: todayBookings, error: todayBookingsError },
+    { data: upcomingSchedules, error: upcomingSchedulesError },
   ] = await Promise.all([
     supabase.from("areas").select("*", { count: "exact", head: true }),
     supabase.from("areas").select("*", { count: "exact", head: true }).eq("status", "active"),
@@ -31,6 +32,15 @@ export default async function DashboardPage() {
       .order("start_at", { ascending: true })
       .limit(5),
   ]);
+  for (const [scope, error] of [
+    ["dashboard-area-count", areaCountError],
+    ["dashboard-active-area-count", activeAreaCountError],
+    ["dashboard-today-schedules", todaySchedulesError],
+    ["dashboard-today-bookings", todayBookingsError],
+    ["dashboard-upcoming-schedules", upcomingSchedulesError],
+  ] as const) {
+    if (error) logError(scope, error);
+  }
 
   const todayBookingCount = (todayBookings ?? []).filter(
     (b: any) => b.schedules?.date === today,
