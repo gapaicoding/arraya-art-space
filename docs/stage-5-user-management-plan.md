@@ -1,6 +1,6 @@
 # Stage 5 — User Management Plan (Admin Kelola User Lain)
 
-**Status:** Draft — **menunggu review Anda, belum dieksekusi.**
+**Status:** ✅ **Selesai dieksekusi dan diverifikasi** (build, unit test, e2e, dan manual browser test terhadap database live).
 **Sumber:** Diskusi soal perbedaan role Admin/Staff — ditemukan bahwa manajemen user (buat akun, ubah role, nonaktifkan) sepenuhnya masih manual lewat Supabase Dashboard, tidak ada UI di dalam aplikasi. Desain UI diperkaya dari analisis referensi aplikasi "Lovin Milk" (halaman Manajemen Pengguna mereka).
 
 Dokumen ini merinci rencana membangun fitur **User Management** di dalam aplikasi sendiri, supaya Admin tidak perlu lagi buka Supabase Dashboard untuk hal-hal dasar terkait user.
@@ -87,3 +87,21 @@ Tidak ada pertanyaan terbuka lagi — dokumen ini siap dieksekusi kapan pun dimi
 
 - Build lolos, unit test baru lulus, e2e baru lulus, e2e existing tidak regresi.
 - Manual: buat user baru lewat fitur ini, langsung coba login pakai kredensial yang di-set; nonaktifkan user test lalu pastikan benar-benar tidak bisa login; pastikan baris akun yang sedang login sendiri terlihat ter-lock di UI.
+
+## Hasil Eksekusi
+
+**Semua item selesai dan diverifikasi:**
+
+- Migration `0004_user_management.sql` diterapkan ke database live (`profiles.email` + `profiles.is_active` ditambahkan, backfill email dari `auth.users` berhasil, trigger `handle_new_user` diperbarui).
+- Halaman `/settings/users` (khusus admin, staff otomatis di-redirect ke `/`) dengan tabel: dropdown role inline, toggle aktif inline, tombol Reset Password per-baris, search, dan **self-row protection** (baris sendiri di-lock, ditandai "(Anda)").
+- 4 Server Actions (`createUserAction`, `updateUserRoleAction`, `toggleUserActiveAction`, `resetUserPasswordAction`) — semua pakai service-role client, semua verifikasi caller admin dulu, semua ditembus guard "tidak bisa 0 admin aktif".
+- Link "Pengguna" ditambahkan ke sidebar & menu `/more`, hanya tampil untuk admin.
+
+**1 bug produksi asli ditemukan & diperbaiki selama testing:** Next.js App Router men-cache/dedupe request PUT berurutan (ban lalu unban) ke URL Admin API yang sama, membuat panggilan kedua kadang gagal dengan error "user not found" yang salah. Diperbaiki dengan memaksa `cache: "no-store"` di custom fetch client admin Supabase (`src/lib/supabase/admin.ts`). Dikonfirmasi lewat script reproduksi standalone (berhasil di luar Next.js) vs. gagal konsisten di dalam Next.js sebelum fix.
+
+**Diverifikasi:**
+- Build: ✅ lolos, route `/settings/users` masuk build output.
+- Unit test: ✅ 52/52 (6 baru untuk `wouldLeaveZeroActiveAdmins`).
+- E2E test: ✅ 15/15 (4 baru: staff diblokir dari halaman, buat user + langsung login, ubah role/nonaktifkan/reset password dengan verifikasi langsung ke Supabase Auth API, guard self-lock).
+- Manual browser test end-to-end terhadap database live: buat user → login sukses; promote/demote role → tercermin di DB; nonaktifkan → login ditolak `user_banned`; aktifkan kembali → login berhasil lagi; reset password → password lama gagal, password baru berhasil; baris admin yang login sendiri terkonfirmasi ter-disable.
+- Database live dipastikan bersih dari data test setelah semua verifikasi (termasuk 1 user sisa dari kesalahan skrip debug sendiri yang sempat lolos, sudah dihapus manual).
