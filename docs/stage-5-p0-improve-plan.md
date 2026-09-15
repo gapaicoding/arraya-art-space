@@ -130,7 +130,11 @@ Disarankan dites di **minimal 2 device**: 1 Android (Chrome) + 1 iPhone (Safari)
 - [ ] Transisi antar halaman terasa responsif (tidak nge-lag berlebihan).
 
 ### Hasil Aktual
-*(diisi setelah Anda menjalankan UAT dan melaporkan hasilnya — laporkan sebagai daftar checklist mana yang gagal beserta screenshot/deskripsi masalahnya, saya perbaiki di sesi berikutnya)*
+**✅ Selesai — UAT fisik dijalankan langsung oleh user di device mobile asli. Hasil: bagus secara keseluruhan.**
+
+Satu temuan: sedikit lag/kurang mulus (minor, tidak mengganggu fungsi). Diselidiki dan ditemukan penyebabnya — `src/components/AppShell.tsx` merender 3 elemen dekoratif "blob" (lingkaran blur besar 120-130px) yang `position: fixed` dan dianimasikan terus-menerus tanpa henti (`animation: ... infinite`) di **setiap** halaman. Kombinasi blur berat + animasi tanpa henti + elemen fixed ini memaksa GPU merender ulang efek blur terus-menerus, yang mahal di GPU mobile.
+
+**Perbaikan:** animasi blob dimatikan otomatis di layar ≤768px (dan untuk siapa pun yang mengaktifkan `prefers-reduced-motion` di OS-nya) lewat media query di `src/app/globals.css` — blob tetap tampil sebagai elemen statis (diam, tidak bergerak) demi visual, animasi tetap jalan normal di desktop yang GPU-nya lebih kuat. Build diverifikasi tetap lolos.
 
 ---
 
