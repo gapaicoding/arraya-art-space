@@ -79,10 +79,9 @@ Halaman baru **`/settings/users`** (khusus Admin), dengan kemampuan:
 ## Keputusan Terkonfirmasi
 
 - **Tingkatan role: tetap 2 (Admin/Staff)** — tidak menambah "Super Admin". Dropdown Peran di UI cukup 2 opsi, sama seperti yang sudah berjalan sekarang.
+- **Password sementara: minimum 6 karakter** — ikut aturan yang sudah ada di form login (`z.string().min(6, "Password minimal 6 karakter")`), tidak dinaikkan lebih ketat.
 
-## Pertanyaan yang Masih Terbuka
-
-1. **Panjang/kompleksitas minimum password sementara** — cukup ikut aturan yang sudah ada di form login (`min 6 karakter`), atau dinaikkan jadi lebih ketat khusus untuk fitur ini?
+Tidak ada pertanyaan terbuka lagi — dokumen ini siap dieksekusi kapan pun diminta.
 
 ## Verifikasi (setelah eksekusi, kalau disetujui)
 
