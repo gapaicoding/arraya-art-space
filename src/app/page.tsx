@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/logger";
 import { currentWeekRangeJakarta, groupAgendaByDate, type PublicAgendaRow } from "@/lib/agenda";
@@ -25,21 +26,32 @@ export default async function PublicAgendaPage() {
   return (
     <div className="relative min-h-screen w-full overflow-x-hidden bg-[linear-gradient(160deg,oklch(0.97_0.02_240)_0%,oklch(0.95_0.02_265)_45%,oklch(0.95_0.03_300)_100%)] font-body text-ink">
       <div className="mx-auto flex max-w-2xl flex-col gap-5 px-4 py-8">
-        <header className="flex items-center gap-3">
-          <Image
-            src="/logo-arayya.jpg"
-            alt="Arayya Art & Space"
-            width={48}
-            height={48}
-            className="size-12 shrink-0 rounded-xl object-cover shadow-lg shadow-brand/30"
-            priority
-          />
-          <div>
-            <p className="font-display text-lg font-bold leading-none">Arayya</p>
-            <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-faint-ink">
-              Art &amp; Space
-            </p>
+        <header className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/logo-arayya.jpg"
+              alt="Arayya Art & Space"
+              width={48}
+              height={48}
+              className="size-12 shrink-0 rounded-xl object-cover shadow-lg shadow-brand/30"
+              priority
+            />
+            <div>
+              <p className="font-display text-lg font-bold leading-none">Arayya</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-faint-ink">
+                Art &amp; Space
+              </p>
+            </div>
           </div>
+          {/* Middleware redirects an already-authenticated visitor from
+              /login straight to /app, so this link works as "go to
+              dashboard" for staff/admin without needing separate logic here. */}
+          <Link
+            href="/login"
+            className="rounded-xl bg-frost/70 px-4 py-2 text-sm font-semibold text-ink shadow-sm"
+          >
+            Login
+          </Link>
         </header>
 
         <div className="glass rounded-[22px] p-5">
