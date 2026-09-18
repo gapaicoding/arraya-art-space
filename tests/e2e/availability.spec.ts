@@ -60,7 +60,7 @@ test.describe("Availability grid", () => {
 
   test("occupied hour shows correct badge, other hours show Tersedia", async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto("/schedule");
+    await page.goto("/app/schedule");
     const dateInput = page.locator('input[type="date"]').first();
     await dateInput.fill(testDate);
     // Wait for the schedule row to actually render in the "Daftar Jadwal"

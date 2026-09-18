@@ -49,7 +49,7 @@ test.describe("Booking flow", () => {
     page,
   }) => {
     await loginAsAdmin(page);
-    await page.goto("/bookings");
+    await page.goto("/app/bookings");
 
     const [h, m] = openTime.split(":").map(Number);
     const endTime = `${String(h + 1).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
@@ -97,7 +97,7 @@ test.describe("Booking flow", () => {
     await expect(row.getByText("Pending")).toBeVisible();
 
     // Check the linked schedule shows booked in availability.
-    await page.goto("/schedule");
+    await page.goto("/app/schedule");
     await page.locator('input[type="date"]').first().fill(testDate);
     // Wait for the "Daftar Jadwal" row to actually render before switching
     // tabs, since the Availability grid is derived from the same React
@@ -110,7 +110,7 @@ test.describe("Booking flow", () => {
     await expect(occupiedSlot).toContainText("Booking");
 
     // Cancel the booking, verify availability frees up.
-    await page.goto("/bookings");
+    await page.goto("/app/bookings");
     await row.getByRole("button", { name: "Detail" }).click();
     await page.getByRole("button", { name: "Batalkan Booking" }).click();
     const confirmButton = page.getByRole("button", { name: "Ya, Batalkan" });
@@ -127,7 +127,7 @@ test.describe("Booking flow", () => {
     // can intercept pointer events on the next page for a moment.
     await expect(confirmButton).toBeHidden({ timeout: 5_000 });
 
-    await page.goto("/schedule");
+    await page.goto("/app/schedule");
     await page.locator('input[type="date"]').first().fill(testDate);
     await expect(page.getByRole("cell", { name: AREA_NAME })).toBeVisible({ timeout: 10_000 });
     await page.getByRole("tab", { name: "Availability" }).click();

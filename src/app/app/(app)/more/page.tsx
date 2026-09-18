@@ -2,23 +2,23 @@
 
 import Link from "next/link";
 import { AppShell } from "@/components/AppShell";
-import { logoutAction } from "@/app/(app)/actions";
+import { logoutAction } from "@/app/app/(app)/actions";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 
 const linkGroups = [
   {
     heading: "Operasional",
-    items: [{ href: "/analytics", label: "Analytic", adminOnly: true }],
+    items: [{ href: "/app/analytics", label: "Analytic", adminOnly: true }],
   },
   {
     heading: "Pengaturan",
     items: [
-      { href: "/settings/business-hours", label: "Jam Operasional", adminOnly: true },
-      { href: "/organizers", label: "Organizer & PIC", adminOnly: true },
-      { href: "/activities", label: "Jenis Kegiatan & Kategori", adminOnly: true },
-      { href: "/areas", label: "Area", adminOnly: true },
-      { href: "/settings/users", label: "Pengguna", adminOnly: true },
+      { href: "/app/settings/business-hours", label: "Jam Operasional", adminOnly: true },
+      { href: "/app/organizers", label: "Organizer & PIC", adminOnly: true },
+      { href: "/app/activities", label: "Jenis Kegiatan & Kategori", adminOnly: true },
+      { href: "/app/areas", label: "Area", adminOnly: true },
+      { href: "/app/settings/users", label: "Pengguna", adminOnly: true },
     ],
   },
 ];

@@ -16,7 +16,7 @@ test.describe("Master data CRUD", () => {
                                                                                                  
   test("admin creates, sees, edits, and persists an Area", async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto("/areas");
+    await page.goto("/app/areas");
 
     await page.getByRole("button", { name: "+ Area Baru" }).click();
     await page.getByLabel("Nama Area").fill(AREA_NAME);
@@ -40,7 +40,7 @@ test.describe("Master data CRUD", () => {
 
   test("admin creates and sees an Activity", async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto("/activities");
+    await page.goto("/app/activities");
     await page.getByRole("button", { name: "+ Aktivitas Baru" }).click();
     await page.getByLabel("Nama Aktivitas").fill(ACTIVITY_NAME);
     await page.getByRole("button", { name: "Simpan" }).click();
@@ -52,7 +52,7 @@ test.describe("Master data CRUD", () => {
 
   test("admin creates and sees an Organizer", async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto("/organizers");
+    await page.goto("/app/organizers");
     await page.getByRole("button", { name: "+ Organizer Baru" }).click();
     await page.getByLabel("Nama").fill(ORGANIZER_NAME);
     await page.getByRole("button", { name: "Simpan" }).click();

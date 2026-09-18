@@ -13,7 +13,7 @@ export default async function UsersPage() {
     .select("role")
     .eq("id", auth.user.id)
     .single();
-  if (currentProfile?.role !== "admin") redirect("/");
+  if (currentProfile?.role !== "admin") redirect("/app");
 
   const { data: users, error } = await supabase
     .from("profiles")

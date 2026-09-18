@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
-import { logoutAction } from "@/app/(app)/actions";
+import { logoutAction } from "@/app/app/(app)/actions";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/client";
@@ -15,29 +15,29 @@ const navGroups = [
   {
     heading: "Operasional",
     items: [
-      { to: "/", label: "Dashboard", glyph: "▦" },
-      { to: "/schedule", label: "Jadwal", glyph: "≡" },
-      { to: "/bookings", label: "Booking", glyph: "▤" },
-      { to: "/analytics", label: "Analytic", glyph: "▲", adminOnly: true },
+      { to: "/app", label: "Dashboard", glyph: "▦" },
+      { to: "/app/schedule", label: "Jadwal", glyph: "≡" },
+      { to: "/app/bookings", label: "Booking", glyph: "▤" },
+      { to: "/app/analytics", label: "Analytic", glyph: "▲", adminOnly: true },
     ],
   },
   {
     heading: "Pengaturan",
     items: [
-      { to: "/settings/business-hours", label: "Jam Operasional", glyph: "⚙", adminOnly: true },
-      { to: "/organizers", label: "Organizer & PIC", glyph: "◍", adminOnly: true },
-      { to: "/activities", label: "Jenis Kegiatan & Kategori", glyph: "◈", adminOnly: true },
-      { to: "/areas", label: "Area", glyph: "◫", adminOnly: true },
-      { to: "/settings/users", label: "Pengguna", glyph: "◉", adminOnly: true },
+      { to: "/app/settings/business-hours", label: "Jam Operasional", glyph: "⚙", adminOnly: true },
+      { to: "/app/organizers", label: "Organizer & PIC", glyph: "◍", adminOnly: true },
+      { to: "/app/activities", label: "Jenis Kegiatan & Kategori", glyph: "◈", adminOnly: true },
+      { to: "/app/areas", label: "Area", glyph: "◫", adminOnly: true },
+      { to: "/app/settings/users", label: "Pengguna", glyph: "◉", adminOnly: true },
     ],
   },
 ] as const;
 
 const mobileNav = [
-  { to: "/", label: "Dashboard", glyph: "▦" },
-  { to: "/schedule", label: "Jadwal", glyph: "≡" },
-  { to: "/bookings", label: "Booking", glyph: "▤" },
-  { to: "/more", label: "Lainnya", glyph: "⋯" },
+  { to: "/app", label: "Dashboard", glyph: "▦" },
+  { to: "/app/schedule", label: "Jadwal", glyph: "≡" },
+  { to: "/app/bookings", label: "Booking", glyph: "▤" },
+  { to: "/app/more", label: "Lainnya", glyph: "⋯" },
 ] as const;
 
 export function AppShell({
@@ -116,7 +116,7 @@ export function AppShell({
                   </p>
                   {items.map((item) => {
                     const active = item.to === path;
-                    const showBadge = item.to === "/" && conflictCount > 0;
+                    const showBadge = item.to === "/app" && conflictCount > 0;
                     return (
                       <Link
                         key={item.to}
@@ -173,8 +173,8 @@ export function AppShell({
 
       <nav className="glass-strong fixed inset-x-3 bottom-3 z-20 flex items-center justify-around rounded-2xl px-2 py-2 lg:hidden">
         {mobileNav.map((item) => {
-          const active = item.to === "/more" ? path.startsWith("/more") || path.startsWith("/areas") || path.startsWith("/activities") || path.startsWith("/organizers") || path.startsWith("/settings") : item.to === path;
-          const showBadge = item.to === "/" && conflictCount > 0;
+          const active = item.to === "/app/more" ? path.startsWith("/app/more") || path.startsWith("/app/areas") || path.startsWith("/app/activities") || path.startsWith("/app/organizers") || path.startsWith("/app/settings") : item.to === path;
+          const showBadge = item.to === "/app" && conflictCount > 0;
           return (
             <Link
               key={item.to}

@@ -1,11 +1,33 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+// Legacy paths from before the app moved under /app (root "/" is now the
+// public agenda page) — redirect bookmarks/links so they don't 404.
+const LEGACY_APP_PREFIXES = [
+  "/schedule",
+  "/bookings",
+  "/areas",
+  "/activities",
+  "/organizers",
+  "/settings",
+  "/more",
+  "/analytics",
+];
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
 export async function updateSession(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+
+  const legacyPrefix = LEGACY_APP_PREFIXES.find(
+    (p) => path === p || path.startsWith(`${p}/`),
+  );
+  if (legacyPrefix) {
+    const url = request.nextUrl.clone();
+    url.pathname = `/app${path}`;
+    return NextResponse.redirect(url);
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -30,10 +52,11 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getUser();
   const user = data.user;
 
-  const path = request.nextUrl.pathname;
-  const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));
+  // Only the internal app (under /app) requires auth — "/" is now the
+  // public agenda page.
+  const isProtected = path === "/app" || path.startsWith("/app/");
 
-  if (!user && !isPublic) {
+  if (!user && isProtected) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -41,7 +64,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && path.startsWith("/login")) {
     const url = request.nextUrl.clone();
-    url.pathname = "/";
+    url.pathname = "/app";
     return NextResponse.redirect(url);
   }
 

@@ -44,7 +44,7 @@ test.describe("Scheduling & conflict rules", () => {
   test("create schedule, detect conflict on overlap, then allow after cancel", async ({ page }) => {
     test.setTimeout(60_000);
     await loginAsAdmin(page);
-    await page.goto("/schedule");
+    await page.goto("/app/schedule");
 
     // Navigate to the test date first so the created schedule shows up immediately.
     const dateInput = page.locator('input[type="date"]').first();

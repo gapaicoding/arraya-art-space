@@ -12,7 +12,7 @@ export default async function AnalyticsPage() {
     .select("role")
     .eq("id", auth.user.id)
     .single();
-  if (currentProfile?.role !== "admin") redirect("/");
+  if (currentProfile?.role !== "admin") redirect("/app");
 
   return (
     <AppShell title="Analytic" subtitle="Laporan & metrik operasional">

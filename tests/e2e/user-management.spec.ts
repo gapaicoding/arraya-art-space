@@ -51,13 +51,13 @@ test.describe("User management", () => {
 
   test("staff cannot access the users settings page", async ({ page }) => {
     await loginAsStaff(page);
-    await page.goto("/settings/users");
-    await expect(page).toHaveURL("/");
+    await page.goto("/app/settings/users");
+    await expect(page).toHaveURL("/app");
   });
 
   test("admin creates a new user who can log in immediately", async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto("/settings/users");
+    await page.goto("/app/settings/users");
 
     await page.getByRole("button", { name: "+ User Baru" }).click();
     const dialog = page.locator('[role="dialog"]');
@@ -77,7 +77,7 @@ test.describe("User management", () => {
     // email verification/invite step was involved.
     await logout(page);
     await login(page, NEW_USER_EMAIL, NEW_USER_PASSWORD);
-    await expect(page).toHaveURL("/");
+    await expect(page).toHaveURL("/app");
   });
 
   test("admin can change another user's role, deactivate, and reset password via the UI", async ({
@@ -98,7 +98,7 @@ test.describe("User management", () => {
       .eq("id", created.user.id);
 
     await loginAsAdmin(page);
-    await page.goto("/settings/users");
+    await page.goto("/app/settings/users");
     const row = page.locator("tr", { hasText: NEW_USER_EMAIL });
     await expect(row).toBeVisible();
 
@@ -156,7 +156,7 @@ test.describe("User management", () => {
 
   test("admin cannot change their own role or deactivate themselves", async ({ page }) => {
     await loginAsAdmin(page);
-    await page.goto("/settings/users");
+    await page.goto("/app/settings/users");
 
     const selfRow = page.locator("tr", { hasText: ADMIN_EMAIL });
     await expect(selfRow.getByRole("combobox")).toBeDisabled();

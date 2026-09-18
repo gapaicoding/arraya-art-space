@@ -13,7 +13,7 @@ export async function login(page: Page, email: string, password = TEST_PASSWORD)
   await emailInput.pressSequentially(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: /Masuk|Memproses/ }).click();
-  await page.waitForURL("/", { timeout: 15_000 });
+  await page.waitForURL("/app", { timeout: 15_000 });
   // The login page calls router.push() *and* router.refresh() — WebKit can
   // still be mid-navigation from that refresh when the next test step
   // fires its own page.goto(), causing a "navigation interrupted" error.

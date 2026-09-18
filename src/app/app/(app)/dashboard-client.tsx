@@ -66,15 +66,15 @@ export function DashboardClient({
           Berikut ringkasan operasional Arayya Art &amp; Space hari ini.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
-          <Link href="/schedule">
+          <Link href="/app/schedule">
             <PrimaryButton className="h-10">+ Buat Jadwal</PrimaryButton>
           </Link>
-          <Link href="/bookings">
+          <Link href="/app/bookings">
             <Button variant="outline" className="h-10">
               + Buat Booking
             </Button>
           </Link>
-          <Link href="/schedule">
+          <Link href="/app/schedule">
             <Button variant="outline" className="h-10">
               Lihat Availability Area
             </Button>
@@ -90,7 +90,7 @@ export function DashboardClient({
             hari ini. Ini seharusnya tidak pernah terjadi — segera periksa dan sesuaikan di
             halaman Jadwal.
           </p>
-          <Link href="/schedule" className="mt-3 inline-block">
+          <Link href="/app/schedule" className="mt-3 inline-block">
             <Button size="sm" variant="destructive">
               Buka Halaman Jadwal
             </Button>
@@ -109,7 +109,7 @@ export function DashboardClient({
         <div className="glass rounded-[22px] p-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="font-semibold">Jadwal Hari Ini</p>
-            <Link href="/schedule" className="text-sm text-brand-ink hover:underline">
+            <Link href="/app/schedule" className="text-sm text-brand-ink hover:underline">
               Lihat semua
             </Link>
           </div>
@@ -140,7 +140,7 @@ export function DashboardClient({
         <div className="glass rounded-[22px] p-5">
           <div className="mb-3 flex items-center justify-between">
             <p className="font-semibold">Aktivitas Mendatang</p>
-            <Link href="/schedule" className="text-sm text-brand-ink hover:underline">
+            <Link href="/app/schedule" className="text-sm text-brand-ink hover:underline">
               Lihat semua
             </Link>
           </div>
