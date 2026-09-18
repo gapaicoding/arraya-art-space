@@ -11,15 +11,26 @@ import { createClient } from "@/lib/supabase/client";
 import { computeScheduleConflicts } from "@/lib/conflicts";
 import { formatDate } from "@/lib/format";
 
-const nav = [
-  { to: "/", label: "Dashboard", glyph: "▦" },
-  { to: "/schedule", label: "Jadwal", glyph: "≡" },
-  { to: "/bookings", label: "Booking", glyph: "▤" },
-  { to: "/areas", label: "Area", glyph: "◫" },
-  { to: "/activities", label: "Aktivitas", glyph: "◈" },
-  { to: "/organizers", label: "Organizer", glyph: "◍" },
-  { to: "/settings/business-hours", label: "Pengaturan", glyph: "⚙" },
-  { to: "/settings/users", label: "Pengguna", glyph: "◉", adminOnly: true },
+const navGroups = [
+  {
+    heading: "Operasional",
+    items: [
+      { to: "/", label: "Dashboard", glyph: "▦" },
+      { to: "/schedule", label: "Jadwal", glyph: "≡" },
+      { to: "/bookings", label: "Booking", glyph: "▤" },
+      { to: "/analytics", label: "Analytic", glyph: "▲", adminOnly: true },
+    ],
+  },
+  {
+    heading: "Pengaturan",
+    items: [
+      { to: "/settings/business-hours", label: "Jam Operasional", glyph: "⚙", adminOnly: true },
+      { to: "/organizers", label: "Organizer & PIC", glyph: "◍", adminOnly: true },
+      { to: "/activities", label: "Jenis Kegiatan & Kategori", glyph: "◈", adminOnly: true },
+      { to: "/areas", label: "Area", glyph: "◫", adminOnly: true },
+      { to: "/settings/users", label: "Pengguna", glyph: "◉", adminOnly: true },
+    ],
+  },
 ] as const;
 
 const mobileNav = [
@@ -92,29 +103,40 @@ export function AppShell({
               </p>
             </div>
           </div>
-          <nav className="mt-8 flex flex-col gap-1">
-            {nav
-              .filter((item) => !("adminOnly" in item && item.adminOnly) || role === "admin")
-              .map((item) => {
-              const active = item.to === path;
-              const showBadge = item.to === "/" && conflictCount > 0;
+          <nav className="mt-8 flex flex-col gap-4">
+            {navGroups.map((group) => {
+              const items = group.items.filter(
+                (item) => !("adminOnly" in item && item.adminOnly) || role === "admin",
+              );
+              if (items.length === 0) return null;
               return (
-                <Link
-                  key={item.to}
-                  href={item.to}
-                  className={
-                    active
-                      ? "flex items-center justify-between rounded-xl bg-frost/70 px-4 py-2.5 text-sm font-semibold text-ink shadow-sm"
-                      : "flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium text-muted-ink transition-colors hover:bg-frost/40"
-                  }
-                >
-                  {item.label}
-                  {showBadge && (
-                    <span className="grid size-5 place-items-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
-                      {conflictCount}
-                    </span>
-                  )}
-                </Link>
+                <div key={group.heading} className="flex flex-col gap-1">
+                  <p className="px-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-faint-ink">
+                    {group.heading}
+                  </p>
+                  {items.map((item) => {
+                    const active = item.to === path;
+                    const showBadge = item.to === "/" && conflictCount > 0;
+                    return (
+                      <Link
+                        key={item.to}
+                        href={item.to}
+                        className={
+                          active
+                            ? "flex items-center justify-between rounded-xl bg-frost/70 px-4 py-2.5 text-sm font-semibold text-ink shadow-sm"
+                            : "flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-medium text-muted-ink transition-colors hover:bg-frost/40"
+                        }
+                      >
+                        {item.label}
+                        {showBadge && (
+                          <span className="grid size-5 place-items-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                            {conflictCount}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
               );
             })}
           </nav>

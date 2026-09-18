@@ -5,7 +5,7 @@ test.describe("Business hours settings", () => {
   test("admin opens business hours settings and sees 7 day rows", async ({ page }) => {
     await loginAsAdmin(page);
     await page.goto("/settings/business-hours");
-    await expect(page.getByText("Jam Operasional")).toBeVisible();
+    await expect(page.getByRole("main").getByText("Jam Operasional")).toBeVisible();
 
     const dayNames = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"];
     for (const day of dayNames) {
