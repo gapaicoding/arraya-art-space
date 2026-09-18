@@ -77,7 +77,16 @@ export function BusinessHoursClient({ initialHours }: { initialHours: BusinessHo
                 <Switch
                   checked={!row.is_closed}
                   disabled={!isAdmin}
-                  onCheckedChange={(checked) => updateRow(row.day_of_week, { is_closed: !checked })}
+                  onCheckedChange={(checked) =>
+                    updateRow(row.day_of_week, {
+                      is_closed: !checked,
+                      // Switching a previously-closed day to open often leaves
+                      // open_time/close_time empty (null from the DB) — fill
+                      // in sensible defaults instead of showing "--:-- --".
+                      ...(checked && !row.open_time ? { open_time: "10:30" } : {}),
+                      ...(checked && !row.close_time ? { close_time: "20:45" } : {}),
+                    })
+                  }
                 />
                 <span className="text-sm text-muted-ink">
                   {row.is_closed ? "Tutup" : "Buka"}

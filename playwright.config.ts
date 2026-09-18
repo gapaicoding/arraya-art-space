@@ -10,12 +10,15 @@ export default defineConfig({
   globalSetup: "./tests/e2e/global-setup.ts",
   globalTeardown: "./tests/e2e/global-teardown.ts",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:3100",
     trace: "retain-on-failure",
   },
   webServer: {
-    command: "bun run dev",
-    url: "http://localhost:3000",
+    // Fixed, dedicated port: other local projects on this machine may
+    // occupy 3000, and reuseExistingServer would silently attach to
+    // whatever answers there instead of this app's own dev server.
+    command: "bun run dev -- -p 3100",
+    url: "http://localhost:3100",
     reuseExistingServer: true,
     timeout: 120_000,
     stdout: "pipe",
