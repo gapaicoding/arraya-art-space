@@ -460,40 +460,56 @@ Display availability
 
 ## 10. Wireframe & UI Requirement
 
+> Diperbarui sesuai implementasi aktual (deskripsi struktur UI, bukan gambar/mockup visual — lihat kode di `src/app/(app)/` untuk detail tampilan sesungguhnya).
+
 ### 10.1 Login
+Form Email + Password, logo Arayya, link ke halaman lain tidak ada (tidak ada self-signup/forgot-password — akun dibuat Admin lewat Manajemen Pengguna). Pesan error "Email atau password salah." untuk kredensial salah.
 
 ### 10.2 Dashboard
+Kartu sambutan + 3 quick action (+ Buat Jadwal, + Buat Booking, Lihat Availability Area). Alert konflik (merah, hanya muncul jika ada — seharusnya tidak pernah terjadi karena dicegah di level database) dengan tombol langsung ke halaman Jadwal. Grid statistik: Jadwal Hari Ini, Booking Hari Ini, Area Digunakan, Area Tersedia. List "Jadwal Hari Ini" dan "Aktivitas Mendatang" (5 item berikutnya). Kartu Total Area & Area Aktif. Badge merah jumlah konflik juga muncul di item nav "Dashboard" (sidebar & bottom nav) supaya terlihat dari halaman manapun.
 
 ### 10.3 Schedule Calendar
+Halaman "Jadwal" — date picker di atas, lalu 2 tab: **Daftar Jadwal** (tabel: Jam, Area, Jenis, Detail, Status, Aksi — dengan Edit/Batalkan) dan **Availability** (lihat 10.5).
 
 ### 10.4 Create Schedule
+Dialog: Tanggal, Area (select), Jenis Jadwal (Aktivitas Internal/Booking Eksternal/Blocked), Aktivitas (select, wajib jika jenis internal), Organizer (select, opsional), Jam Mulai, Jam Selesai, Kapasitas (opsional), Catatan. Validasi: jam selesai > jam mulai, dalam jam operasional, area harus aktif; konflik jadwal ditolak dengan pesan "Jadwal bertabrakan dengan jadwal lain di area ini."
 
 ### 10.5 Availability
+Tab di halaman Jadwal — grid per area, badge per jam berwarna sesuai status: Tersedia (hijau), Aktivitas Internal, Booking, Diblokir, Tutup.
 
 ### 10.6 Booking List
+Halaman "Booking" — search box (nama customer/organizer atau no. booking) + filter status (Semua/Pending/Konfirmasi/Dibatalkan/Selesai) + tabel dengan pagination server-side (20 baris/halaman): No. Booking, Customer/Organizer, Area, Tanggal & Jam, Status, Aksi.
 
 ### 10.7 Booking Detail
+Dialog: seluruh info booking + status saat ini. Tombol aksi kontekstual sesuai status: Konfirmasi (dari Pending), Selesaikan (dari Konfirmasi), Batalkan Booking (dengan dialog konfirmasi — membatalkan booking sekaligus membuka kembali availability area).
 
 ### 10.8 Create Booking
+Dialog: Nama Customer/Organizer, Contact Person, Telepon, Area (select, tampil kapasitas), Tanggal, Jam Mulai/Selesai, Jumlah Peserta (divalidasi ≤ kapasitas area), Tujuan/Aktivitas, Aktivitas Terkait (opsional), Organizer (opsional), Catatan.
 
 ### 10.9 Area Management
+Tabel (Nama, Kode, Kapasitas, Lokasi, Status, Aksi) + search + pagination server-side. Tombol Tambah/Edit/Nonaktifkan hanya untuk Admin (Staff read-only).
 
 ### 10.10 Activity Management
+Tabel (Nama, Kategori, Durasi, Organizer, Status, Aksi) + search + pagination. Sama seperti Area, tulis hanya untuk Admin.
 
 ### 10.11 Organizer Management
+Tabel (Nama, Tipe, PIC, Kontak, Status, Aksi) + search + pagination. Sama, tulis hanya untuk Admin.
 
 ### 10.12 Business Hours
+7 baris tetap (Senin–Minggu), masing-masing: toggle Buka/Tutup + input Jam Buka/Tutup (disembunyikan jika Tutup). Hanya Admin yang bisa mengubah.
 
 ### 10.13 User Management
+Tabel (Nama, Email, Peran [dropdown inline Admin/Staff], Status [badge Aktif/Nonaktif], Dibuat, toggle Aktif) + search + tombol "+ User Baru" + tombol "Reset Password" per baris. Baris milik user yang sedang login sendiri di-lock (dropdown & toggle disabled, ditandai "(Anda)") supaya tidak bisa mendemote/menonaktifkan diri sendiri. Khusus Admin — Staff yang mencoba akses URL-nya langsung di-redirect ke Dashboard.
 
 ### 10.14 Settings
+Diimplementasikan sebagai menu "Pengaturan" (sidebar desktop, link langsung ke Jam Operasional) dan halaman "Lainnya" (bottom nav mobile) yang mengumpulkan link ke Master Area, Master Aktivitas, Organizer, Jam Operasional, dan Manajemen Pengguna (khusus Admin) dalam satu list, plus tombol Keluar.
 
-Mobile bottom navigation:
+Mobile bottom navigation (sesuai implementasi):
 
 Dashboard
-Schedule
+Jadwal
 Booking
-More
+Lainnya
 
 ---
 
@@ -581,19 +597,112 @@ Availability Engine
 
 ## 13. Database Model
 
+> Diperbarui sesuai implementasi aktual — lihat `supabase/migrations/0001_init.sql` (skema awal) dan `supabase/migrations/0004_user_management.sql` (kolom tambahan). Semua tabel mengaktifkan Row Level Security (RLS); lihat §14 untuk matriks izin per role.
+
 ### profiles
+
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| id | uuid, PK | = `auth.users.id` (relasi 1:1 dengan akun Supabase Auth) |
+| full_name | text, nullable | |
+| role | text | `admin` \| `staff`, default `staff` |
+| email | text, nullable | Disalin dari `auth.users.email` saat akun dibuat/diperbarui (untuk tampilan di Manajemen Pengguna tanpa round-trip ke Admin API) |
+| is_active | boolean | default `true`; `false` = akun dinonaktifkan (dikombinasikan dengan ban di level Supabase Auth) |
+| created_at | timestamptz | |
 
 ### areas
 
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| id | uuid, PK | |
+| name | text | |
+| code | text, unique | |
+| description | text, nullable | |
+| capacity | integer | harus > 0 (CHECK constraint) |
+| location | text, nullable | |
+| status | text | `active` \| `inactive`, default `active` |
+| created_at, updated_at | timestamptz | |
+| created_by, updated_by | uuid, FK → profiles | |
+
 ### organizers
+
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| id | uuid, PK | |
+| name | text | |
+| type | text | `internal` \| `external` |
+| pic_name | text, nullable | |
+| phone | text, nullable | |
+| email | text, nullable | |
+| notes | text, nullable | |
+| status | text | `active` \| `inactive`, default `active` |
+| created_at, updated_at | timestamptz | |
+| created_by, updated_by | uuid, FK → profiles | |
 
 ### activities
 
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| id | uuid, PK | |
+| name | text | |
+| category | text, nullable | |
+| description | text, nullable | |
+| default_duration_minutes | integer | harus > 0, default 60 |
+| organizer_id | uuid, FK → organizers, nullable | `on delete set null` |
+| capacity_recommendation | integer, nullable | |
+| status | text | `active` \| `inactive`, default `active` |
+| created_at, updated_at | timestamptz | |
+| created_by, updated_by | uuid, FK → profiles | |
+
 ### business_hours
+
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| id | uuid, PK | |
+| day_of_week | integer, unique | 0 (Minggu) – 6 (Sabtu) |
+| is_closed | boolean | default `false` |
+| open_time | time, nullable | null jika `is_closed` |
+| close_time | time, nullable | null jika `is_closed` |
+| updated_at | timestamptz | |
+| updated_by | uuid, FK → profiles | |
 
 ### schedules
 
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| id | uuid, PK | |
+| area_id | uuid, FK → areas | not null |
+| activity_id | uuid, FK → activities, nullable | `on delete set null` |
+| organizer_id | uuid, FK → organizers, nullable | `on delete set null` |
+| type | text | `internal_activity` \| `external_booking` \| `blocked` |
+| date | date | |
+| start_at, end_at | timestamptz | CHECK `end_at > start_at` |
+| capacity | integer, nullable | |
+| notes | text, nullable | |
+| status | text | `draft` \| `confirmed` \| `cancelled` \| `completed`, default `draft` |
+| created_at, updated_at | timestamptz | |
+| created_by, updated_by | uuid, FK → profiles | |
+
+**Constraint anti-tabrakan (§8.1):** `EXCLUDE USING gist (area_id WITH =, tstzrange(start_at, end_at, '[)') WITH &&) WHERE (status <> 'cancelled')` — mencegah dua schedule aktif (bukan cancelled) tumpang tindih waktu di area yang sama, ditegakkan di level database (bukan cuma validasi aplikasi).
+
 ### bookings
+
+| Kolom | Tipe | Keterangan |
+|---|---|---|
+| id | uuid, PK | |
+| booking_number | text, unique | auto-generate format `BK-YYYYMMDD-0001` |
+| schedule_id | uuid, FK → schedules | not null — booking selalu punya schedule terkait |
+| customer_organizer_name | text | not null |
+| contact_person | text, nullable | |
+| phone | text, nullable | |
+| participant_count | integer, nullable | divalidasi ≤ kapasitas area saat insert (fungsi `create_booking`) |
+| purpose | text, nullable | |
+| notes | text, nullable | |
+| status | text | `pending` \| `confirmed` \| `cancelled` \| `completed`, default `pending` |
+| created_at, updated_at | timestamptz | |
+| created_by, updated_by | uuid, FK → profiles | |
+
+**Fungsi RPC transaksional** (`supabase/migrations/0002_booking_rpc.sql`): `create_booking(...)` membuat `schedules` + `bookings` sekaligus dalam satu transaksi (termasuk validasi kapasitas), dan `cancel_booking(booking_id)` membatalkan booking + schedule terkait sekaligus — supaya availability selalu konsisten dengan status booking.
 
 Relasi utama:
 
@@ -624,6 +733,8 @@ Area
 | Business Hours | ✅ | Read |
 | User Management | ✅ | ❌ |
 | System Settings | ✅ | ❌ |
+
+> **Status implementasi:** seluruh baris di atas sudah diimplementasikan dan diverifikasi (termasuk User Management — lihat §10.13, §13, dan `docs/stage-5-user-management-plan.md` untuk detail). Staff yang mencoba mengakses halaman admin-only (Manajemen Pengguna) langsung di-redirect; percobaan bypass langsung lewat API (melewati UI) juga tetap ditolak oleh RLS di level database, sudah diverifikasi terhadap production.
 
 ---
 
@@ -718,6 +829,8 @@ Reservasi eksternal siap digunakan.
 
 Output:
 MVP siap operasional.
+
+**Status: ✅ Selesai**, dengan improvement tambahan yang dikerjakan setelah output awal Stage 5 tercapai (unit test + e2e test menyeluruh, verifikasi RLS langsung ke production, UAT mobile fisik, pagination, dukungan e2e WebKit, alert konflik dashboard, dan fitur Manajemen Pengguna). Detail lengkap tiap sub-tahap ada di `docs/stage-5-testing-plan.md`, `docs/stage-5-p0-improve-plan.md`, `docs/stage-5-p1-improve-plan.md`, `docs/stage-5-p2-improve-plan.md`, dan `docs/stage-5-user-management-plan.md`.
 
 ### Stage 6 — Reporting
 
@@ -865,16 +978,19 @@ Payment
 
 ## 22. Lampiran
 
-- Database ERD.
-- UI wireframe.
-- Design System.
-- Supabase migration.
-- RLS specification.
-- UAT test cases.
-- Deployment guide.
-- Environment setup.
-- Seed data.
-- Future Kids Center architecture.
+Status per item (✅ tersedia nyata, ⚠️ belum ada file terpisah):
+
+- Database ERD — ⚠️ belum ada diagram visual terpisah; struktur lengkap sudah tertulis di §13 dan sumber aslinya di `supabase/migrations/0001_init.sql`, `0002_booking_rpc.sql`, `0004_user_management.sql`.
+- UI wireframe — ⚠️ belum ada mockup visual; deskripsi struktur UI aktual sudah tertulis di §10 (rujuk kode di `src/app/(app)/` untuk tampilan sesungguhnya).
+- Design System — ⚠️ belum ada dokumen terpisah; token warna/style ada di `src/app/globals.css` dan komponen di `src/components/ui/` (shadcn/ui).
+- Supabase migration — ✅ `supabase/migrations/` (4 file, urut 0001–0004).
+- RLS specification — ✅ tertulis sebagai policy SQL langsung di setiap migration; ringkasan matriks akses ada di §14.
+- UAT test cases — ✅ `docs/stage-5-p0-improve-plan.md` (checklist UAT mobile) dan `docs/stage-5-testing-plan.md`.
+- Deployment guide — ✅ `README.md` bagian Deployment.
+- Environment setup — ✅ `.env.example`, `README.md`.
+- Seed data — ⚠️ belum ada file seed terpisah; data awal (business hours 7 hari) di-insert langsung dalam migration.
+- Future Kids Center architecture — ✅ sudah di §17 dokumen ini.
+- Laporan implementasi tiap stage — ✅ `docs/stage-0-foundation.md` s.d. `docs/stage-5-hardening.md`, plus `docs/stage-5-testing-plan.md`, `docs/stage-5-p0/p1/p2-improve-plan.md`, `docs/stage-5-user-management-plan.md`, dan ringkasan di `docs/laporan-improvement-lengkap.md`.
 
 ---
 
