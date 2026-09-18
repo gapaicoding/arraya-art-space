@@ -22,8 +22,8 @@ export function BusinessHoursClient({ initialHours }: { initialHours: BusinessHo
           id: "",
           day_of_week: day,
           is_closed: day === 0,
-          open_time: "09:00",
-          close_time: "18:00",
+          open_time: "10:30",
+          close_time: "20:45",
           updated_at: "",
           updated_by: null,
         }
