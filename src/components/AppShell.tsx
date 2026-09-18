@@ -87,7 +87,7 @@ export function AppShell({
 
       <div className="relative z-10 mx-auto flex min-h-screen max-w-[1440px] gap-5 p-4 pb-24 lg:gap-6 lg:p-6 lg:pb-6">
         <aside className="glass hidden w-64 shrink-0 flex-col rounded-[26px] p-5 lg:flex">
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <Image
               src="/logo-arayya.jpg"
               alt="Arayya Art & Space"
@@ -102,7 +102,7 @@ export function AppShell({
                 Art &amp; Space
               </p>
             </div>
-          </div>
+          </Link>
           <nav className="mt-8 flex flex-col gap-4">
             {navGroups.map((group) => {
               const items = group.items.filter(
