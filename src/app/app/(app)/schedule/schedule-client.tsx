@@ -294,6 +294,13 @@ export function ScheduleClient({
     if (error.code === "23P01" || error.code === "23505") {
       return "Jadwal bertabrakan dengan jadwal lain di area ini.";
     }
+    if (error.code === "57014") {
+      // Statement timeout — under heavy lock contention on the same slot
+      // (e.g. two people submitting the same time at once), Postgres can
+      // time out waiting instead of returning a clean 23P01. Most likely
+      // cause is the same conflict, just surfaced differently.
+      return "Permintaan memakan waktu terlalu lama, kemungkinan karena ada jadwal lain yang sedang diproses di jam yang sama. Muat ulang halaman untuk memeriksa apakah jadwal sudah tersimpan sebelum mencoba lagi.";
+    }
     if (error.code === "23514") {
       return "Data jadwal tidak valid (misalnya jam selesai harus setelah jam mulai, atau kapasitas tidak sesuai). Periksa kembali isian Anda.";
     }
@@ -322,7 +329,7 @@ export function ScheduleClient({
   return (
     <AppShell
       title="Jadwal"
-      subtitle="Kelola jadwal & lihat availability area"
+      subtitle="Kelola jadwal & lihat ketersediaan area"
       action={
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -517,7 +524,7 @@ export function ScheduleClient({
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="list">Daftar Jadwal</TabsTrigger>
-          <TabsTrigger value="availability">Availability</TabsTrigger>
+          <TabsTrigger value="availability">Ketersediaan</TabsTrigger>
         </TabsList>
 
         <TabsContent value="list" className="mt-4">
@@ -566,7 +573,7 @@ export function ScheduleClient({
                                 <AlertDialogHeader>
                                   <AlertDialogTitle>Batalkan jadwal ini?</AlertDialogTitle>
                                   <AlertDialogDescription>
-                                    Availability area akan terbuka kembali setelah jadwal dibatalkan.
+                                    Ketersediaan area akan terbuka kembali setelah jadwal dibatalkan.
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>

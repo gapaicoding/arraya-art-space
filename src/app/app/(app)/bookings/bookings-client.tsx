@@ -260,6 +260,12 @@ export function BookingsClient({
     if (error.code === "23P01" || error.code === "23505" || msg.toLowerCase().includes("overlap")) {
       return "Jadwal bertabrakan dengan jadwal lain di area ini.";
     }
+    if (error.code === "57014") {
+      // Statement timeout — under heavy lock contention on the same slot,
+      // Postgres can time out waiting instead of returning a clean 23P01.
+      // Most likely cause is the same conflict, just surfaced differently.
+      return "Permintaan memakan waktu terlalu lama, kemungkinan karena ada booking lain yang sedang diproses di jam yang sama. Muat ulang halaman untuk memeriksa apakah booking sudah tersimpan sebelum mencoba lagi.";
+    }
     if (error.code === "23514") {
       return "Data booking tidak valid (misalnya jam selesai harus setelah jam mulai, atau jumlah peserta melebihi kapasitas). Periksa kembali isian Anda.";
     }
