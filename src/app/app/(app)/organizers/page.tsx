@@ -11,6 +11,12 @@ export default async function OrganizersPage() {
     .range(0, PAGE_SIZE - 1);
   if (error) logError("organizers-page-fetch", error);
 
+  // TEMP: isolate whether .range() itself is the problem in prod.
+  const noRange = await supabase
+    .from("organizers")
+    .select("*", { count: "exact" })
+    .order("name", { ascending: true });
+
   return (
     <>
       {/* TEMP DEBUG — remove after diagnosing prod empty-list bug */}
@@ -28,7 +34,9 @@ export default async function OrganizersPage() {
         }}
       >
         DEBUG rows={JSON.stringify(organizers?.length ?? null)} count=
-        {JSON.stringify(count)} err={JSON.stringify(error?.message ?? null)}
+        {JSON.stringify(count)} err={JSON.stringify(error?.message ?? null)} | noRange rows=
+        {JSON.stringify(noRange.data?.length ?? null)} count={JSON.stringify(noRange.count)} err=
+        {JSON.stringify(noRange.error?.message ?? null)}
       </div>
       <OrganizersClient initialOrganizers={organizers ?? []} initialCount={count ?? 0} />
     </>
