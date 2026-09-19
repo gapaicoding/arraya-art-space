@@ -12,7 +12,8 @@ export default async function ActivitiesPage() {
       .from("activities")
       .select("*", { count: "exact" })
       .order("name", { ascending: true })
-      .range(0, PAGE_SIZE - 1),
+      // See organizers/page.tsx for why .range() is avoided here.
+      .limit(PAGE_SIZE),
     // Full list, not paginated — used as dropdown options in the form, not the table.
     supabase.from("organizers").select("*").order("name", { ascending: true }),
   ]);

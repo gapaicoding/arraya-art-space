@@ -17,7 +17,8 @@ export default async function BookingsPage() {
         count: "exact",
       })
       .order("created_at", { ascending: false })
-      .range(0, PAGE_SIZE - 1),
+      // See organizers/page.tsx for why .range() is avoided here.
+      .limit(PAGE_SIZE),
     supabase.from("areas").select("*").eq("status", "active").order("name", { ascending: true }),
     supabase.from("organizers").select("*").eq("status", "active").order("name", { ascending: true }),
     supabase.from("activities").select("*").eq("status", "active").order("name", { ascending: true }),

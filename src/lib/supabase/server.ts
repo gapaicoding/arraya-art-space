@@ -25,6 +25,14 @@ export async function createClient() {
           }
         },
       },
+      global: {
+        // Next.js patches global fetch and caches GET requests by default
+        // in production unless told otherwise — without this, Supabase
+        // reads made during SSR/RSC rendering can silently serve stale
+        // data instead of the live table contents.
+        fetch: (url: RequestInfo | URL, options?: RequestInit) =>
+          fetch(url, { ...options, cache: "no-store" }),
+      },
     },
   );
 }

@@ -8,7 +8,8 @@ export default async function AreasPage() {
     .from("areas")
     .select("*", { count: "exact" })
     .order("name", { ascending: true })
-    .range(0, PAGE_SIZE - 1);
+    // See organizers/page.tsx for why .range() is avoided here.
+    .limit(PAGE_SIZE);
   if (error) logError("areas-page-fetch", error);
 
   return <AreasClient initialAreas={areas ?? []} initialCount={count ?? 0} />;
