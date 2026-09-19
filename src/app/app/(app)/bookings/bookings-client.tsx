@@ -7,6 +7,7 @@ import { bookingFormSchema, exceedsAreaCapacity } from "@/lib/booking-validation
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { AppShell, PrimaryButton } from "@/components/AppShell";
+import { TableSkeletonRows } from "@/components/skeletons/table-skeleton-rows";
 import { createClient } from "@/lib/supabase/client";
 import type { Activity, Area, Booking, BookingStatus, Organizer } from "@/lib/supabase/types";
 import { formatDate, formatDateOnly, formatTime, localDateTimeToIso } from "@/lib/format";
@@ -110,6 +111,7 @@ export function BookingsClient({
   const [page, setPage] = useState(1);
   const [open, setOpen] = useState(false);
   const [detail, setDetail] = useState<BookingWithSchedule | null>(null);
+  const [loading, setLoading] = useState(false);
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   // Search and status filter are both server-side (with pagination) so the
@@ -132,6 +134,7 @@ export function BookingsClient({
   }, [search, statusFilter]);
 
   async function loadBookings(targetPage: number, searchValue: string, status: string) {
+    setLoading(true);
     const supabase = createClient();
     const from = (targetPage - 1) * PAGE_SIZE;
     let query = supabase
@@ -152,11 +155,13 @@ export function BookingsClient({
       .range(from, from + PAGE_SIZE - 1);
     if (error) {
       toast.error("Gagal memuat data: " + error.message);
+      setLoading(false);
       return;
     }
     setBookings((data as any) ?? []);
     setTotalCount(count ?? 0);
     setPage(targetPage);
+    setLoading(false);
   }
 
   function goToPage(targetPage: number) {
@@ -531,7 +536,8 @@ export function BookingsClient({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {bookings.map((b) => (
+              {loading && <TableSkeletonRows columns={6} rows={4} />}
+              {!loading && bookings.map((b) => (
                 <TableRow key={b.id}>
                   <TableCell className="font-medium">{b.booking_number}</TableCell>
                   <TableCell>{b.customer_organizer_name}</TableCell>
@@ -557,7 +563,7 @@ export function BookingsClient({
                   </TableCell>
                 </TableRow>
               ))}
-              {bookings.length === 0 && (
+              {!loading && bookings.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-ink">
                     Tidak ada booking.

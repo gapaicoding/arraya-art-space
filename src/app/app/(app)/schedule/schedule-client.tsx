@@ -8,6 +8,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { scheduleFormSchema, SCHEDULE_NONE } from "@/lib/schedule-validation";
 import { toast } from "sonner";
 import { AppShell, PrimaryButton } from "@/components/AppShell";
+import { TableSkeletonRows } from "@/components/skeletons/table-skeleton-rows";
+import { AvailabilitySkeleton } from "@/components/skeletons/availability-skeleton";
 import { createClient } from "@/lib/supabase/client";
 import type {
   Activity,
@@ -542,7 +544,8 @@ export function ScheduleClient({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {schedules.map((s) => (
+                  {loading && <TableSkeletonRows columns={6} rows={4} />}
+                  {!loading && schedules.map((s) => (
                     <TableRow key={s.id}>
                       <TableCell className="whitespace-nowrap font-medium">
                         {formatTime(s.start_at)}–{formatTime(s.end_at)}
@@ -603,6 +606,9 @@ export function ScheduleClient({
         </TabsContent>
 
         <TabsContent value="availability" className="mt-4">
+          {loading ? (
+            <AvailabilitySkeleton areas={Math.max(activeAreas.length, 1)} />
+          ) : (
           <div className="space-y-3">
             {availability.map(({ area, slots }) => (
               <div key={area.id} className="glass rounded-[22px] p-4">
@@ -628,6 +634,7 @@ export function ScheduleClient({
               </div>
             )}
           </div>
+          )}
         </TabsContent>
       </Tabs>
     </AppShell>
