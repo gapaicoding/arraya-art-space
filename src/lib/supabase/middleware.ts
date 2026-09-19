@@ -46,6 +46,12 @@ export async function updateSession(request: NextRequest) {
           );
         },
       },
+      global: {
+        // Avoid Next.js's default fetch caching serving a stale auth
+        // check across requests — see src/lib/supabase/server.ts.
+        fetch: (url: RequestInfo | URL, options?: RequestInit) =>
+          fetch(url, { ...options, cache: "no-store" }),
+      },
     },
   );
 
