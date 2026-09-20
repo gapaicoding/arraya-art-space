@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AppShell, PrimaryButton } from "@/components/AppShell";
+import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
@@ -59,7 +59,8 @@ export function DashboardClient({
   const { fullName } = useAuth();
 
   return (
-    <AppShell title="Dashboard" subtitle={todayLabel}>
+    <>
+      <PageHeader title="Dashboard" subtitle={todayLabel} />
       <div className="glass rounded-[22px] p-5">
         <p className="text-lg font-semibold">Selamat datang, {fullName ?? "Staff"} 👋</p>
         <p className="mt-1 text-sm text-muted-ink">
@@ -76,7 +77,7 @@ export function DashboardClient({
           </Link>
           <Link href="/app/schedule">
             <Button variant="outline" className="h-10">
-              Lihat Availability Area
+              Lihat Ketersediaan Area
             </Button>
           </Link>
         </div>
@@ -173,6 +174,6 @@ export function DashboardClient({
         <StatCard label="Total Area" value={areaCount} />
         <StatCard label="Area Aktif" value={activeAreaCount} />
       </div>
-    </AppShell>
+    </>
   );
 }

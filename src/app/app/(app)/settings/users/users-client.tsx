@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { AppShell, PrimaryButton } from "@/components/AppShell";
+import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import type { Profile } from "@/lib/supabase/types";
 import { formatDateOnly } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -207,7 +207,8 @@ export function UsersClient({
   }
 
   return (
-    <AppShell
+    <>
+    <PageHeader
       title="Manajemen Pengguna"
       subtitle="Kelola akun, peran, dan status pengguna Arayya"
       action={
@@ -289,7 +290,8 @@ export function UsersClient({
           </DialogContent>
         </Dialog>
       }
-    >
+    />
+
       <div className="glass rounded-[22px] p-4">
         <Input
           placeholder="Cari nama atau email pengguna..."
@@ -367,6 +369,6 @@ export function UsersClient({
           </Table>
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

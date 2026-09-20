@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { AppShell, PrimaryButton } from "@/components/AppShell";
+import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/client";
 import type { Organizer } from "@/lib/supabase/types";
@@ -167,7 +167,8 @@ export function OrganizersClient({
   }
 
   return (
-    <AppShell
+    <>
+    <PageHeader
       title="Organizer"
       subtitle="Kelola penyelenggara internal & eksternal"
       action={
@@ -298,7 +299,8 @@ export function OrganizersClient({
           </Dialog>
         ) : undefined
       }
-    >
+    />
+
       <div className="glass rounded-[22px] p-4">
         <Input
           placeholder="Cari organizer..."
@@ -375,6 +377,6 @@ export function OrganizersClient({
           </div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

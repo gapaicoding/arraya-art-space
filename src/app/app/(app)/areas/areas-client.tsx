@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { AppShell, PrimaryButton } from "@/components/AppShell";
+import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/client";
 import type { Area } from "@/lib/supabase/types";
@@ -177,7 +177,8 @@ export function AreasClient({
   }
 
   return (
-    <AppShell
+    <>
+    <PageHeader
       title="Master Area"
       subtitle="Kelola ruang/area operasional Arayya"
       action={
@@ -287,7 +288,8 @@ export function AreasClient({
           </Dialog>
         ) : undefined
       }
-    >
+    />
+
       <div className="glass rounded-[22px] p-4">
         <Input
           placeholder="Cari nama atau kode area..."
@@ -369,6 +371,6 @@ export function AreasClient({
           </div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }

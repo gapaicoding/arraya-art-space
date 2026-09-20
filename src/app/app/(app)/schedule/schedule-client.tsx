@@ -7,7 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { scheduleFormSchema, SCHEDULE_NONE } from "@/lib/schedule-validation";
 import { toast } from "sonner";
-import { AppShell, PrimaryButton } from "@/components/AppShell";
+import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { TableSkeletonRows } from "@/components/skeletons/table-skeleton-rows";
 import { AvailabilitySkeleton } from "@/components/skeletons/availability-skeleton";
 import { createClient } from "@/lib/supabase/client";
@@ -329,7 +329,8 @@ export function ScheduleClient({
   );
 
   return (
-    <AppShell
+    <>
+    <PageHeader
       title="Jadwal"
       subtitle="Kelola jadwal & lihat ketersediaan area"
       action={
@@ -515,7 +516,8 @@ export function ScheduleClient({
           </DialogContent>
         </Dialog>
       }
-    >
+    />
+
       <div className="glass rounded-[22px] p-4">
         <div className="flex flex-wrap items-center gap-3">
           <Input type="date" value={date} onChange={(e) => handleDateChange(e.target.value)} className="w-44" />
@@ -637,6 +639,6 @@ export function ScheduleClient({
           )}
         </TabsContent>
       </Tabs>
-    </AppShell>
+    </>
   );
 }

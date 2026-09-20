@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { AppShell, PrimaryButton } from "@/components/AppShell";
+import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/client";
 import type { BusinessHour } from "@/lib/supabase/types";
@@ -57,7 +57,8 @@ export function BusinessHoursClient({ initialHours }: { initialHours: BusinessHo
   }
 
   return (
-    <AppShell
+    <>
+    <PageHeader
       title="Jam Operasional"
       subtitle="Atur jam buka & tutup per hari"
       action={
@@ -67,7 +68,8 @@ export function BusinessHoursClient({ initialHours }: { initialHours: BusinessHo
           </PrimaryButton>
         ) : undefined
       }
-    >
+    />
+
       <div className="glass rounded-[22px] p-4">
         <div className="divide-y divide-frost/60">
           {rows.map((row) => (
@@ -115,6 +117,6 @@ export function BusinessHoursClient({ initialHours }: { initialHours: BusinessHo
           ))}
         </div>
       </div>
-    </AppShell>
+    </>
   );
 }

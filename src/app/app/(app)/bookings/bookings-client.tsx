@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { bookingFormSchema, exceedsAreaCapacity } from "@/lib/booking-validation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { AppShell, PrimaryButton } from "@/components/AppShell";
+import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { TableSkeletonRows } from "@/components/skeletons/table-skeleton-rows";
 import { createClient } from "@/lib/supabase/client";
 import type { Activity, Area, Booking, BookingStatus, Organizer } from "@/lib/supabase/types";
@@ -281,7 +281,8 @@ export function BookingsClient({
   }
 
   return (
-    <AppShell
+    <>
+    <PageHeader
       title="Booking"
       subtitle="Reservasi eksternal & pihak ketiga"
       action={
@@ -498,7 +499,8 @@ export function BookingsClient({
           </DialogContent>
         </Dialog>
       }
-    >
+    />
+
       <div className="glass rounded-[22px] p-4">
         <div className="flex flex-wrap items-center gap-3">
           <Input
@@ -690,6 +692,6 @@ export function BookingsClient({
           )}
         </DialogContent>
       </Dialog>
-    </AppShell>
+    </>
   );
 }

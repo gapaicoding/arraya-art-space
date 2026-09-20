@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AppShell } from "@/components/AppShell";
+import { PageHeader } from "@/components/AppShell";
 import { logoutAction } from "@/app/app/(app)/actions";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -27,7 +27,8 @@ export default function MorePage() {
   const { isAdmin } = useAuth();
 
   return (
-    <AppShell title="Lainnya" subtitle="Master data & pengaturan">
+    <>
+      <PageHeader title="Lainnya" subtitle="Master data & pengaturan" />
       {linkGroups.map((group) => {
         const items = group.items.filter((l) => !("adminOnly" in l && l.adminOnly) || isAdmin);
         if (items.length === 0) return null;
@@ -54,6 +55,6 @@ export default function MorePage() {
           Keluar
         </Button>
       </form>
-    </AppShell>
+    </>
   );
 }

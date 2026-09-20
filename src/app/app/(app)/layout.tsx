@@ -1,5 +1,6 @@
 import { getCurrentUserProfile } from "@/lib/auth";
 import { AuthProvider } from "@/lib/auth-context";
+import { AppShell } from "@/components/AppShell";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { profile, email } = await getCurrentUserProfile();
@@ -13,7 +14,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         isAdmin: role === "admin",
       }}
     >
-      {children}
+      <AppShell>{children}</AppShell>
     </AuthProvider>
   );
 }

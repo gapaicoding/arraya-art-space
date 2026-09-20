@@ -28,7 +28,7 @@ const navGroups = [
       { to: "/app/organizers", label: "Organizer & PIC", glyph: "◍", adminOnly: true },
       { to: "/app/activities", label: "Jenis Kegiatan & Kategori", glyph: "◈", adminOnly: true },
       { to: "/app/areas", label: "Area", glyph: "◫", adminOnly: true },
-      { to: "/app/settings/users", label: "Pengguna", glyph: "◉", adminOnly: true },
+      { to: "/app/settings/users", label: "Manajemen Pengguna", glyph: "◉", adminOnly: true },
     ],
   },
 ] as const;
@@ -40,17 +40,7 @@ const mobileNav = [
   { to: "/app/more", label: "Lainnya", glyph: "⋯" },
 ] as const;
 
-export function AppShell({
-  title,
-  subtitle,
-  action,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  action?: ReactNode;
-  children: ReactNode;
-}) {
+export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
   const { fullName, role } = useAuth();
   const initials = (fullName ?? "Staff")
@@ -158,17 +148,7 @@ export function AppShell({
           </div>
         </aside>
 
-        <main className="flex w-full min-w-0 flex-col gap-5">
-          <header className="glass flex flex-wrap items-center justify-between gap-3 rounded-[22px] px-5 py-3">
-            <div className="min-w-0">
-              <p className="font-display text-lg font-bold leading-tight">{title}</p>
-              <p className="mt-1 text-sm text-muted-ink">{subtitle}</p>
-            </div>
-            {action}
-          </header>
-
-          {children}
-        </main>
+        <main className="flex w-full min-w-0 flex-col gap-5">{children}</main>
       </div>
 
       <nav className="glass-strong fixed inset-x-3 bottom-3 z-20 flex items-center justify-around rounded-2xl px-2 py-2 lg:hidden">
@@ -198,6 +178,26 @@ export function AppShell({
         })}
       </nav>
     </div>
+  );
+}
+
+export function PageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle: string;
+  action?: ReactNode;
+}) {
+  return (
+    <header className="glass flex flex-wrap items-center justify-between gap-3 rounded-[22px] px-5 py-3">
+      <div className="min-w-0">
+        <p className="font-display text-lg font-bold leading-tight">{title}</p>
+        <p className="mt-1 text-sm text-muted-ink">{subtitle}</p>
+      </div>
+      {action}
+    </header>
   );
 }
 

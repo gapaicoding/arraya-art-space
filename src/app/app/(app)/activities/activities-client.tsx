@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { AppShell, PrimaryButton } from "@/components/AppShell";
+import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/client";
 import type { Activity, Organizer } from "@/lib/supabase/types";
@@ -184,7 +184,8 @@ export function ActivitiesClient({
   }
 
   return (
-    <AppShell
+    <>
+    <PageHeader
       title="Master Aktivitas"
       subtitle="Kelola jenis kegiatan Arayya"
       action={
@@ -324,7 +325,8 @@ export function ActivitiesClient({
           </Dialog>
         ) : undefined
       }
-    >
+    />
+
       <div className="glass rounded-[22px] p-4">
         <Input
           placeholder="Cari aktivitas..."
@@ -401,6 +403,6 @@ export function ActivitiesClient({
           </div>
         )}
       </div>
-    </AppShell>
+    </>
   );
 }
