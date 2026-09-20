@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 import { createClient } from "@/lib/supabase/server";
-import { AppShell } from "@/components/AppShell";
+import { logError } from "@/lib/logger";
+import { AnalyticsClient } from "./analytics-client";
 
 export default async function AnalyticsPage() {
   const supabase = await createClient();
@@ -14,14 +16,31 @@ export default async function AnalyticsPage() {
     .single();
   if (currentProfile?.role !== "admin") redirect("/app");
 
+  const now = new Date();
+  const start = format(startOfMonth(now), "yyyy-MM-dd");
+  const end = format(endOfMonth(now), "yyyy-MM-dd");
+
+  const [{ data: areas }, { data: businessHours }] = await Promise.all([
+    supabase.from("areas").select("*").eq("status", "active").order("name", { ascending: true }),
+    supabase.from("business_hours").select("*"),
+  ]);
+
+  const { data: schedules, error: schedulesError } = await supabase
+    .from("schedules")
+    .select("id, date, start_at, end_at, status, area_id, bookings(status)")
+    .gte("date", start)
+    .lte("date", end)
+    .neq("status", "cancelled");
+  if (schedulesError) logError("analytics-page-fetch", schedulesError);
+
   return (
-    <AppShell title="Analytic" subtitle="Laporan & metrik operasional">
-      <div className="glass rounded-[22px] p-8 text-center">
-        <p className="font-display text-lg font-bold">Coming Soon</p>
-        <p className="mt-1 text-sm text-muted-ink">
-          Fitur analitik (okupansi area, aktivitas terpopuler, tren booking) sedang disiapkan.
-        </p>
-      </div>
-    </AppShell>
+    <AnalyticsClient
+      initialStart={start}
+      initialEnd={end}
+      initialAreaId={null}
+      areas={areas ?? []}
+      businessHours={businessHours ?? []}
+      initialSchedules={(schedules as any) ?? []}
+    />
   );
 }
