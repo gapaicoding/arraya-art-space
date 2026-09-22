@@ -850,6 +850,8 @@ MVP siap operasional.
 - Enrollment.
 - Attendance.
 
+**Status: 📋 Plan tersedia, belum dieksekusi.** Kerangka implementasi lengkap (asumsi terdokumentasi, skema database, user flow, rencana UI, dan sub-stage 7.1–7.5) ada di `docs/stage-7-kids-center-plan.md`. Asumsi kunci: guardian tanpa login (dikelola Admin/Staff), satu child = satu guardian utama, class punya pola jadwal berulang yang di-generate ke `schedules` existing, attendance dicatat manual, membership sebagai flag sederhana tanpa billing (payment ditunda ke Stage 8). Beberapa open question masih menunggu konfirmasi manajemen — lihat §9 di dokumen tersebut.
+
 ### Stage 8 — Commercial Expansion
 
 - Payment.
@@ -858,6 +860,8 @@ MVP siap operasional.
 - Customer portal.
 - Partner portal.
 - Notifications.
+
+**Status: 📋 Plan garis besar tersedia** (lebih ringkas dari Stage 7 karena menyentuh keputusan bisnis yang belum bisa diasumsikan sepihak: vendor payment gateway, kebijakan refund, vendor notifikasi) — lihat `docs/stage-8-commercial-expansion-plan.md`. Bergantung pada Stage 7 selesai lebih dulu (Invoice/Payment melekat pada Enrollment dan Booking).
 
 ---
 
@@ -991,6 +995,8 @@ Status per item (✅ tersedia nyata, ⚠️ belum ada file terpisah):
 - Seed data — ⚠️ belum ada file seed terpisah; data awal (business hours 7 hari) di-insert langsung dalam migration.
 - Future Kids Center architecture — ✅ sudah di §17 dokumen ini.
 - Laporan implementasi tiap stage — ✅ `docs/stage-0-foundation.md` s.d. `docs/stage-5-hardening.md`, plus `docs/stage-5-testing-plan.md`, `docs/stage-5-p0/p1/p2-improve-plan.md`, `docs/stage-5-user-management-plan.md`, dan ringkasan di `docs/laporan-improvement-lengkap.md`.
+- Plan Stage 7 (Kids Center Foundation) — ✅ `docs/stage-7-kids-center-plan.md`: asumsi terdokumentasi, skema database rencana, user flow, permission matrix perluasan, rencana UI, dan sub-stage 7.1–7.5. Belum dieksekusi.
+- Plan Stage 8 (Commercial Expansion) — ✅ `docs/stage-8-commercial-expansion-plan.md`: garis besar Payment/Package/Portal, asumsi yang butuh keputusan bisnis eksplisit (vendor gateway, kebijakan refund). Belum dieksekusi, menunggu Stage 7 selesai.
 
 ---
 
