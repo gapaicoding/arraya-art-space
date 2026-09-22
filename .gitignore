@@ -45,3 +45,13 @@ playwright-report/
 test-results/
 blob-report/
 .env.test
+# Added by code-review-graph
+.code-review-graph/
+
+# Local AI coding assistant tooling config (per-developer, not app code)
+.claude/
+.codebuddy/
+.gemini/
+.qoder/
+.mcp.json
+opencode.jsonc
