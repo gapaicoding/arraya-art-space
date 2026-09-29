@@ -863,6 +863,8 @@ MVP siap operasional.
 
 **Status: 📋 Plan garis besar tersedia** (lebih ringkas dari Stage 7 karena menyentuh keputusan bisnis yang belum bisa diasumsikan sepihak: vendor payment gateway, kebijakan refund, vendor notifikasi) — lihat `docs/stage-8-commercial-expansion-plan.md`. Bergantung pada Stage 7 selesai lebih dulu (Invoice/Payment melekat pada Enrollment dan Booking).
 
+**Stage 8.1 — Registrasi Publik (sub-stage berdiri sendiri, tidak bergantung Stage 7):** bagian "Public booking" di atas dipecah lebih dulu jadi versi ringan — form registrasi minat (bukan booking resmi/payment) di atas halaman publik agenda yang sudah ada (Stage 5.2). Plan tersedia di `docs/stage-8.1-public-event-registration-plan.md`. 📋 Belum dieksekusi.
+
 ### Stage 9 — Retail & Financial Operations (MVP)
 
 - Master Produk (paket kerajinan) & Katalog Bahan.
