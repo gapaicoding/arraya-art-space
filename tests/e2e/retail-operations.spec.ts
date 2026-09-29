@@ -2,16 +2,15 @@ import { test, expect, type Page } from "@playwright/test";
 import { loginAsAdmin, loginAsStaff, logout, TEST_PREFIX } from "./helpers";
 
 /**
- * Fills the mandatory "Siapa yang input data sekarang?" prompt that
- * blocks Rekap Penjualan/Pengeluaran until an inputter name is set for
- * this browser context (fresh per test, so it always appears here).
+ * Fills the inline "Nama Penginput" field at the top of Rekap
+ * Penjualan/Pengeluaran and saves it. Not a dialog — this is a standard
+ * page field, remembered per browser context (localStorage) once saved.
  */
 async function setInputterName(page: Page, name: string) {
-  const dialog = page.locator('[role="dialog"]');
-  await expect(dialog.getByText("Siapa yang input data sekarang?")).toBeVisible();
-  await dialog.getByPlaceholder("Nama penginput").fill(name);
-  await dialog.getByRole("button", { name: "Simpan" }).click();
-  await expect(dialog).toBeHidden();
+  const input = page.getByLabel("Nama Penginput");
+  await input.fill(name);
+  await page.getByRole("button", { name: "Simpan" }).click();
+  await expect(input).toHaveValue(name);
 }
 
 test.describe("Stage 9 — Rekap Penjualan & Pengeluaran", () => {
@@ -54,27 +53,19 @@ test.describe("Stage 9 — Rekap Penjualan & Pengeluaran", () => {
     await expect(row.getByText(`${TEST_PREFIX}Staff`)).toBeVisible();
   });
 
-  test("inputter name is remembered across entries and can be changed via 'Ganti'", async ({
-    page,
-  }) => {
+  test("inputter name is remembered across visits and can be edited inline", async ({ page }) => {
     await loginAsStaff(page);
     await page.goto("/app/sales");
     await setInputterName(page, `${TEST_PREFIX}First`);
-    await expect(page.getByText(`Penginput saat ini: ${TEST_PREFIX}First`)).toBeVisible();
 
-    // Reload — the dialog should NOT reappear, the name is remembered
-    // for this browser context (localStorage), not re-prompted per visit.
+    // Reload — remembered for this browser context (localStorage), no
+    // re-prompt needed.
     await page.reload();
-    await expect(page.getByText(`Penginput saat ini: ${TEST_PREFIX}First`)).toBeVisible();
-    await expect(page.locator('[role="dialog"]')).toBeHidden();
+    await expect(page.getByLabel("Nama Penginput")).toHaveValue(`${TEST_PREFIX}First`);
 
-    // "Ganti" opens the same dialog to switch names mid-session.
-    await page.getByRole("button", { name: "Ganti" }).click();
-    const dialog = page.locator('[role="dialog"]');
-    await expect(dialog.getByText("Siapa yang input data sekarang?")).toBeVisible();
-    await dialog.getByPlaceholder("Nama penginput").fill(`${TEST_PREFIX}Second`);
-    await dialog.getByRole("button", { name: "Simpan" }).click();
-    await expect(page.getByText(`Penginput saat ini: ${TEST_PREFIX}Second`)).toBeVisible();
+    // Edited directly inline — no dialog involved.
+    await setInputterName(page, `${TEST_PREFIX}Second`);
+    await expect(page.getByLabel("Nama Penginput")).toHaveValue(`${TEST_PREFIX}Second`);
   });
 
   test("all roles see the financial summary on Dashboard", async ({ page }) => {

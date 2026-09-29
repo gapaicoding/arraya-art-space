@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 /**
- * Shown at the top of Rekap Penjualan/Pengeluaran. Blocks with a dialog
- * until an inputter name is set for this device/session (can't be
- * dismissed without filling it in), then shows a small banner with a
- * "Ganti" button to change it later in the same session.
+ * Standard inline field at the top of Rekap Penjualan/Pengeluaran — not a
+ * modal. Remembers "who is physically entering data on this device"
+ * separately from the logged-in Supabase Auth account (staff can share a
+ * device across a shift).
  */
 export function InputterBanner({
   inputterName,
@@ -20,70 +19,50 @@ export function InputterBanner({
   hydrated: boolean;
   onSetName: (name: string) => void;
 }) {
-  const [forceOpen, setForceOpen] = useState(false);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(inputterName ?? "");
 
-  const open = forceOpen || (hydrated && !inputterName);
+  useEffect(() => {
+    if (hydrated) setDraft(inputterName ?? "");
+  }, [hydrated, inputterName]);
 
-  function submit() {
+  function save() {
     const trimmed = draft.trim();
-    if (!trimmed) return;
+    if (!trimmed || trimmed === inputterName) return;
     onSetName(trimmed);
-    setForceOpen(false);
-    setDraft("");
   }
 
   return (
-    <>
-      <div className="glass flex flex-wrap items-center justify-between gap-2 rounded-[22px] p-4">
-        <p className="text-sm text-muted-ink">
-          Penginput saat ini:{" "}
-          <span className="font-medium text-ink">{inputterName ?? "-"}</span>
-        </p>
+    <div className="glass rounded-[22px] p-4">
+      <label htmlFor="inputter-name" className="text-sm text-muted-ink">
+        Nama Penginput
+      </label>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Input
+          id="inputter-name"
+          placeholder="Ketik nama penginput..."
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+          }}
+          className="max-w-xs"
+        />
         <Button
+          type="button"
           size="sm"
           variant="outline"
-          onClick={() => {
-            setDraft(inputterName ?? "");
-            setForceOpen(true);
-          }}
+          onClick={save}
+          disabled={!draft.trim() || draft.trim() === inputterName}
         >
-          Ganti
+          Simpan
         </Button>
-      </div>
-
-      <Dialog
-        open={open}
-        onOpenChange={(next) => {
-          // Can't be dismissed (escape, outside click, X button) without
-          // an inputter name already set — this is the initial mandatory
-          // prompt, not an optional dialog.
-          if (!next && !inputterName) return;
-          setForceOpen(next);
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Siapa yang input data sekarang?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-ink">
-            Nama ini akan diingat di perangkat ini untuk transaksi berikutnya, sampai diganti
-            manual lewat tombol &quot;Ganti&quot;.
+        {!inputterName && hydrated && (
+          <p className="text-xs text-destructive">
+            Isi nama penginput dulu sebelum mencatat transaksi.
           </p>
-          <Input
-            placeholder="Nama penginput"
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") submit();
-            }}
-            autoFocus
-          />
-          <Button className="w-full" onClick={submit} disabled={!draft.trim()}>
-            Simpan
-          </Button>
-        </DialogContent>
-      </Dialog>
-    </>
+        )}
+      </div>
+    </div>
   );
 }
