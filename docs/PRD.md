@@ -863,6 +863,33 @@ MVP siap operasional.
 
 **Status: 📋 Plan garis besar tersedia** (lebih ringkas dari Stage 7 karena menyentuh keputusan bisnis yang belum bisa diasumsikan sepihak: vendor payment gateway, kebijakan refund, vendor notifikasi) — lihat `docs/stage-8-commercial-expansion-plan.md`. Bergantung pada Stage 7 selesai lebih dulu (Invoice/Payment melekat pada Enrollment dan Booking).
 
+### Stage 9 — Retail & Financial Operations (MVP)
+
+- Master Produk (paket kerajinan) & Katalog Bahan.
+- Rekap Penjualan per item harian.
+- Rekap Pengeluaran (restock bahan etalase).
+- Dashboard finansial (omzet, pengeluaran, estimasi profit) — digabung ke
+  Dashboard existing (`/app`), bukan halaman terpisah.
+
+**Status: 📋 Plan tersedia, belum dieksekusi.** Domain baru (bukan
+kelanjutan scheduling/booking), sama seperti Stage 7 menambah domain Kids
+Center. RBAC 3-tier dari Stage 5.3 jadi prasyarat. Lihat
+`docs/stage-9-retail-financial-operations-plan.md` untuk skema tabel,
+master data awal (16 produk + 19 bahan dari data owner), dan keputusan
+scope (BOM/auto-deduct stok sengaja ditunda ke Stage 10).
+
+### Stage 10 — Bill of Materials & Inventory (belum direncanakan detail)
+
+- Relasi resep produk → bahan (BOM).
+- Auto-deduct stok bahan saat ada penjualan.
+- Stock opname (rekonsiliasi stok fisik vs sistem).
+- Kalkulasi HPP otomatis per paket.
+
+**Status: 💭 Belum ada plan tertulis.** Data komposisi/resep dari owner
+sudah disimpan di `docs/stage-9-retail-financial-operations-plan.md`
+(§ Referensi BOM untuk Stage 10) supaya siap dipakai begitu stage ini
+mulai digarap — tidak perlu minta ulang ke pihak owner.
+
 ---
 
 ## 17. Future Kids Center Architecture
