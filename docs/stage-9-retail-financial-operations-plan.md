@@ -282,5 +282,27 @@ dieksekusi — supaya tidak perlu minta ulang ke Mr Ryan:
 
 ## Status
 
-Menunggu instruksi eksekusi eksplisit dari owner sebelum implementasi kode
-dimulai, sesuai pola kerja stage-stage sebelumnya di proyek ini.
+**✅ Selesai di `main`**, dengan penyempurnaan tambahan di luar scope MVP
+awal dokumen ini (ditambahkan setelah diskusi lanjutan dengan owner):
+
+- Skema, master data seed, RLS, halaman `/app/sales`, `/app/expenses`,
+  `/app/products`, `/app/expense-items`, Dashboard finansial — migrasi
+  `0007_retail_financial_mvp.sql`.
+- **Nama Penginput** (mengikuti pola "penginput" lovinmilk, disesuaikan
+  jadi versi lebih sederhana — teks bebas + diingat per device via
+  localStorage, bukan session tervalidasi server seperti lovinmilk) —
+  migrasi `0008_inputter_name.sql`.
+- **Edit/Arsipkan/Pulihkan/Hapus Permanen** transaksi penjualan &
+  pengeluaran (melengkapi matrix RBAC Stage 5.3 yang sebelumnya didesain
+  tapi belum diimplementasi di UI) — migrasi
+  `0009_transaction_archive_guard.sql` (trigger yang menegakkan
+  archive/restore admin+ di level database, bukan cuma UI).
+
+Semua migrasi (0007-0009) sudah diterapkan ke project Supabase yang
+terhubung. Verifikasi: unit test + `next build` lolos di tiap tahap; e2e
+(`tests/e2e/retail-operations.spec.ts`) 8/8 lolos mencakup create, edit,
+archive/restore/hard-delete, dan guard permission per role.
+
+**Belum dikerjakan** (di luar scope MVP, sengaja ditunda ke Stage 10):
+BOM/auto-deduct stok bahan, kalkulasi HPP otomatis, stock opname — lihat
+§ Referensi BOM untuk Stage 10 di atas.
