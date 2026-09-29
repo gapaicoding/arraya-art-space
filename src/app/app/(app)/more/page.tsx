@@ -15,6 +15,7 @@ const linkGroups: { heading: string; items: LinkItem[] }[] = [
     items: [
       { href: "/app/sales", label: "Rekap Penjualan" },
       { href: "/app/expenses", label: "Rekap Pengeluaran" },
+      { href: "/app/registrations", label: "Pendaftaran", minRole: "admin" as const },
     ],
   },
   {

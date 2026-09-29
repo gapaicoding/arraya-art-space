@@ -21,6 +21,7 @@ const navGroups = [
       { to: "/app/bookings", label: "Booking", glyph: "▤" },
       { to: "/app/sales", label: "Rekap Penjualan", glyph: "$" },
       { to: "/app/expenses", label: "Rekap Pengeluaran", glyph: "$" },
+      { to: "/app/registrations", label: "Pendaftaran", glyph: "✉", minRole: "admin" },
     ],
   },
   {

@@ -11,7 +11,7 @@ export default async function PublicAgendaPage() {
 
   const { data, error } = await supabase
     .from("schedules")
-    .select("date, start_at, end_at, activities(name), areas(name)")
+    .select("id, date, start_at, end_at, activities(name), areas(name)")
     .gte("date", start)
     .lte("date", end)
     .neq("status", "cancelled")
@@ -76,9 +76,17 @@ export default async function PublicAgendaPage() {
                       <p className="text-sm font-semibold">{item.activityName}</p>
                       <p className="text-xs text-muted-ink">{item.areaName}</p>
                     </div>
-                    <p className="whitespace-nowrap text-sm font-medium text-muted-ink">
-                      {item.timeRange}
-                    </p>
+                    <div className="flex shrink-0 items-center gap-3">
+                      <p className="whitespace-nowrap text-sm font-medium text-muted-ink">
+                        {item.timeRange}
+                      </p>
+                      <Link
+                        href={`/daftar/${item.scheduleId}`}
+                        className="rounded-xl bg-brand/15 px-3 py-1.5 text-xs font-semibold text-brand-ink"
+                      >
+                        Daftar
+                      </Link>
+                    </div>
                   </div>
                 ))}
               </div>

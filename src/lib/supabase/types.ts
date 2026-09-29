@@ -163,6 +163,27 @@ export interface ExpenseTransaction {
   expense_items?: { name: string; category: string | null; unit: string } | null;
 }
 
+export type EventRegistrationStatus = "pending" | "confirmed" | "rejected";
+
+export interface EventRegistration {
+  id: string;
+  schedule_id: string;
+  customer_name: string;
+  phone: string;
+  participant_count: number;
+  notes: string | null;
+  status: EventRegistrationStatus;
+  created_at: string;
+  reviewed_at: string | null;
+  reviewed_by: string | null;
+  schedules?: {
+    date: string;
+    start_at: string;
+    end_at: string;
+    activities: { name: string } | null;
+  } | null;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -184,6 +205,11 @@ export interface Database {
         Row: ExpenseTransaction;
         Insert: Partial<ExpenseTransaction>;
         Update: Partial<ExpenseTransaction>;
+      };
+      event_registrations: {
+        Row: EventRegistration;
+        Insert: Partial<EventRegistration>;
+        Update: Partial<EventRegistration>;
       };
     };
   };

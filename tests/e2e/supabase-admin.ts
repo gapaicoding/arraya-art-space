@@ -127,4 +127,7 @@ export async function cleanupTestData() {
   }
   await supabase.from("products").delete().ilike("name", `${TEST_PREFIX}%`);
   await supabase.from("expense_items").delete().ilike("name", `${TEST_PREFIX}%`);
+
+  // Stage 8.1 — public event registrations are tagged via customer_name.
+  await supabase.from("event_registrations").delete().ilike("customer_name", `${TEST_PREFIX}%`);
 }

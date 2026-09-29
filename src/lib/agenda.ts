@@ -11,6 +11,7 @@ export function currentWeekRangeJakarta(now: Date = new Date()) {
 }
 
 export type PublicAgendaRow = {
+  id: string;
   date: string;
   start_at: string;
   end_at: string;
@@ -20,7 +21,7 @@ export type PublicAgendaRow = {
 
 export type AgendaDayGroup = {
   date: string;
-  items: { timeRange: string; activityName: string; areaName: string }[];
+  items: { scheduleId: string; timeRange: string; activityName: string; areaName: string }[];
 };
 
 /** Group and format raw schedule rows into per-day agenda entries for display. */
@@ -29,6 +30,7 @@ export function groupAgendaByDate(rows: PublicAgendaRow[]): AgendaDayGroup[] {
   for (const row of rows) {
     const items = byDate.get(row.date) ?? [];
     items.push({
+      scheduleId: row.id,
       timeRange: `${formatTime(row.start_at)}–${formatTime(row.end_at)}`,
       activityName: row.activities?.name ?? "Kegiatan",
       areaName: row.areas?.name ?? "-",
