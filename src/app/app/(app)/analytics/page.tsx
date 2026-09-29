@@ -14,7 +14,7 @@ export default async function AnalyticsPage() {
     .select("role")
     .eq("id", auth.user.id)
     .single();
-  if (currentProfile?.role !== "admin") redirect("/app");
+  if (currentProfile?.role !== "admin" && currentProfile?.role !== "super_admin") redirect("/app");
 
   const now = new Date();
   const start = format(startOfMonth(now), "yyyy-MM-dd");

@@ -37,6 +37,7 @@ export function adminClient() {
 }
 
 export const TEST_PREFIX = "E2E_TEST_";
+export const SUPER_ADMIN_EMAIL = "e2e-test-super-admin@arayya.test";
 export const ADMIN_EMAIL = "e2e-test-admin@arayya.test";
 export const STAFF_EMAIL = "e2e-test-staff@arayya.test";
 export const TEST_PASSWORD = "E2eTest!Str0ngPwd#9";
@@ -44,7 +45,7 @@ export const TEST_PASSWORD = "E2eTest!Str0ngPwd#9";
 export async function seedTestUsers() {
   const supabase = adminClient();
 
-  async function ensureUser(email: string, role: "admin" | "staff") {
+  async function ensureUser(email: string, role: "super_admin" | "admin" | "staff") {
     // Clean up any leftover user with this email first.
     const { data: list } = await supabase.auth.admin.listUsers({ perPage: 1000 });
     const existing = list?.users.find((u) => u.email === email);
@@ -70,9 +71,10 @@ export async function seedTestUsers() {
     return data.user.id;
   }
 
+  const superAdminId = await ensureUser(SUPER_ADMIN_EMAIL, "super_admin");
   const adminId = await ensureUser(ADMIN_EMAIL, "admin");
   const staffId = await ensureUser(STAFF_EMAIL, "staff");
-  return { adminId, staffId };
+  return { superAdminId, adminId, staffId };
 }
 
 export async function cleanupTestData() {
@@ -81,7 +83,7 @@ export async function cleanupTestData() {
   // Delete test users.
   const { data: list } = await supabase.auth.admin.listUsers({ perPage: 1000 });
   for (const u of list?.users ?? []) {
-    if (u.email === ADMIN_EMAIL || u.email === STAFF_EMAIL) {
+    if (u.email === SUPER_ADMIN_EMAIL || u.email === ADMIN_EMAIL || u.email === STAFF_EMAIL) {
       await supabase.auth.admin.deleteUser(u.id);
     }
   }

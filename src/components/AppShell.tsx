@@ -7,6 +7,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { logoutAction } from "@/app/app/(app)/actions";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
+import { meetsMinRole } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/client";
 import { computeScheduleConflicts } from "@/lib/conflicts";
 import { formatDate } from "@/lib/format";
@@ -18,17 +19,22 @@ const navGroups = [
       { to: "/app", label: "Dashboard", glyph: "▦" },
       { to: "/app/schedule", label: "Jadwal", glyph: "≡" },
       { to: "/app/bookings", label: "Booking", glyph: "▤" },
-      { to: "/app/analytics", label: "Analytic", glyph: "▲", adminOnly: true },
+    ],
+  },
+  {
+    heading: "Ringkasan & Analitik",
+    items: [
+      { to: "/app/analytics", label: "Analytic", glyph: "▲", minRole: "admin" },
     ],
   },
   {
     heading: "Pengaturan",
     items: [
-      { to: "/app/settings/business-hours", label: "Jam Operasional", glyph: "⚙", adminOnly: true },
-      { to: "/app/organizers", label: "Organizer & PIC", glyph: "◍", adminOnly: true },
-      { to: "/app/activities", label: "Jenis Kegiatan & Kategori", glyph: "◈", adminOnly: true },
-      { to: "/app/areas", label: "Area", glyph: "◫", adminOnly: true },
-      { to: "/app/settings/users", label: "Manajemen Pengguna", glyph: "◉", adminOnly: true },
+      { to: "/app/settings/business-hours", label: "Jam Operasional", glyph: "⚙", minRole: "admin" },
+      { to: "/app/organizers", label: "Organizer & PIC", glyph: "◍", minRole: "admin" },
+      { to: "/app/activities", label: "Jenis Kegiatan & Kategori", glyph: "◈", minRole: "admin" },
+      { to: "/app/areas", label: "Area", glyph: "◫", minRole: "admin" },
+      { to: "/app/settings/users", label: "Manajemen Pengguna", glyph: "◉", minRole: "super_admin" },
     ],
   },
 ] as const;
@@ -42,7 +48,8 @@ const mobileNav = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const path = usePathname();
-  const { fullName, role } = useAuth();
+  const auth = useAuth();
+  const { fullName, role } = auth;
   const initials = (fullName ?? "Staff")
     .split(" ")
     .map((s) => s[0])
@@ -95,8 +102,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Link>
           <nav className="mt-8 flex flex-col gap-4">
             {navGroups.map((group) => {
-              const items = group.items.filter(
-                (item) => !("adminOnly" in item && item.adminOnly) || role === "admin",
+              const items = group.items.filter((item) =>
+                meetsMinRole(auth, "minRole" in item ? item.minRole : undefined),
               );
               if (items.length === 0) return null;
               return (
