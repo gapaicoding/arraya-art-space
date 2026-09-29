@@ -19,6 +19,8 @@ const navGroups = [
       { to: "/app", label: "Dashboard", glyph: "▦" },
       { to: "/app/schedule", label: "Jadwal", glyph: "≡" },
       { to: "/app/bookings", label: "Booking", glyph: "▤" },
+      { to: "/app/sales", label: "Rekap Penjualan", glyph: "$" },
+      { to: "/app/expenses", label: "Rekap Pengeluaran", glyph: "$" },
     ],
   },
   {

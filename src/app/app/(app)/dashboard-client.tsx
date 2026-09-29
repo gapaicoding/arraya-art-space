@@ -5,7 +5,11 @@ import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
-import { formatTime } from "@/lib/format";
+import { formatCurrency, formatTime } from "@/lib/format";
+import {
+  MOCK_EXPENSE_TRANSACTIONS,
+  MOCK_SALES_TRANSACTIONS,
+} from "@/lib/retail-mock-data";
 
 const TYPE_LABEL_ID: Record<string, string> = {
   internal_activity: "Aktivitas Internal",
@@ -58,6 +62,19 @@ export function DashboardClient({
 }) {
   const { fullName } = useAuth();
 
+  // Preview-only: computed from src/lib/retail-mock-data.ts, not real
+  // sales/expense transactions yet. See
+  // docs/stage-9-retail-financial-operations-plan.md.
+  const todayOmzet = MOCK_SALES_TRANSACTIONS.reduce(
+    (sum, t) => sum + t.quantity * t.unit_price,
+    0,
+  );
+  const todayExpenses = MOCK_EXPENSE_TRANSACTIONS.reduce(
+    (sum, t) => sum + t.quantity * t.unit_price,
+    0,
+  );
+  const estimatedProfit = todayOmzet - todayExpenses;
+
   return (
     <>
       <PageHeader title="Dashboard" subtitle={todayLabel} />
@@ -104,6 +121,20 @@ export function DashboardClient({
         <StatCard label="Booking Hari Ini" value={todayBookingCount} />
         <StatCard label="Area Digunakan" value={areasInUseCount} />
         <StatCard label="Area Tersedia" value={areasAvailableCount} />
+      </div>
+
+      <div>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="font-semibold">Ringkasan Finansial Hari Ini</p>
+          <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-brand-ink">
+            Pratinjau — data contoh
+          </span>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatCard label="Omzet" value={formatCurrency(todayOmzet)} />
+          <StatCard label="Pengeluaran" value={formatCurrency(todayExpenses)} />
+          <StatCard label="Estimasi Profit" value={formatCurrency(estimatedProfit)} />
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
