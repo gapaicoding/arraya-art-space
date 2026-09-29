@@ -117,7 +117,7 @@ test.describe("User management", () => {
 
     // Promote to admin, then demote back to staff.
     await row.getByRole("combobox").click();
-    await page.getByRole("option", { name: "Admin" }).click();
+    await page.getByRole("option", { name: "Admin", exact: true }).click();
     await expect(row.getByRole("combobox")).toContainText("Admin", { timeout: 5_000 });
     const { data: afterPromote } = await supabase
       .from("profiles")
