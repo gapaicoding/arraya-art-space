@@ -36,6 +36,8 @@ const navGroups = [
       { to: "/app/organizers", label: "Organizer & PIC", glyph: "◍", minRole: "admin" },
       { to: "/app/activities", label: "Jenis Kegiatan & Kategori", glyph: "◈", minRole: "admin" },
       { to: "/app/areas", label: "Area", glyph: "◫", minRole: "admin" },
+      { to: "/app/products", label: "Produk", glyph: "◆", minRole: "admin" },
+      { to: "/app/expense-items", label: "Katalog Bahan", glyph: "◆", minRole: "admin" },
       { to: "/app/settings/users", label: "Manajemen Pengguna", glyph: "◉", minRole: "super_admin" },
     ],
   },

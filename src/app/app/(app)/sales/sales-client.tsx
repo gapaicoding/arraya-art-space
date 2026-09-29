@@ -1,17 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { formatCurrency, formatDateOnly } from "@/lib/format";
-import {
-  MOCK_PRODUCTS,
-  MOCK_SALES_TRANSACTIONS,
-  type SalesTransaction,
-} from "@/lib/retail-mock-data";
+import { sumSalesTotal } from "@/lib/sales";
+import { createClient } from "@/lib/supabase/client";
+import type { Product, SalesTransaction } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -55,23 +53,47 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-export function SalesClient() {
-  const [transactions, setTransactions] = useState<SalesTransaction[]>(MOCK_SALES_TRANSACTIONS);
-  const [dateFilter, setDateFilter] = useState(today());
+export function SalesClient({
+  initialProducts,
+  initialTransactions,
+  initialDate,
+}: {
+  initialProducts: Product[];
+  initialTransactions: SalesTransaction[];
+  initialDate: string;
+}) {
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [dateFilter, setDateFilter] = useState(initialDate);
   const [open, setOpen] = useState(false);
 
-  const productById = useMemo(
-    () => new Map(MOCK_PRODUCTS.map((p) => [p.id, p])),
-    [],
-  );
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    loadTransactions(dateFilter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateFilter]);
+
+  async function loadTransactions(date: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("sales_transactions")
+      .select("*, products(name, category)")
+      .eq("transaction_date", date)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error("Gagal memuat data: " + error.message);
+      return;
+    }
+    setTransactions((data as any) ?? []);
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { product_id: "", quantity: 1, transaction_date: today(), notes: "" },
+    defaultValues: { product_id: "", quantity: 1, transaction_date: dateFilter, notes: "" },
   });
 
   function openCreate() {
@@ -79,27 +101,35 @@ export function SalesClient() {
     setOpen(true);
   }
 
-  function onSubmit(values: FormValues) {
-    const product = productById.get(values.product_id);
+  async function onSubmit(values: FormValues) {
+    const product = initialProducts.find((p) => p.id === values.product_id);
     if (!product) return;
-    const newTransaction: SalesTransaction = {
-      id: crypto.randomUUID(),
+
+    const supabase = createClient();
+    const { error } = await supabase.from("sales_transactions").insert({
       product_id: values.product_id,
       quantity: values.quantity,
-      // Snapshot the product's current price at the moment of entry — this
-      // mirrors how the real sales_transactions.unit_price column will
-      // behave (copied at insert time, not a live join to products.price).
+      // Snapshot the product's current price at the moment of entry —
+      // deliberately not a live join, so historical recap stays correct
+      // if the product's price is revised later.
       unit_price: product.price,
       transaction_date: values.transaction_date,
       notes: values.notes || null,
-    };
-    setTransactions((prev) => [newTransaction, ...prev]);
-    toast.success("Penjualan dicatat (preview — belum tersimpan ke database)");
+    });
+    if (error) {
+      toast.error("Gagal mencatat penjualan: " + error.message);
+      return;
+    }
+    toast.success("Penjualan dicatat");
     setOpen(false);
+    if (values.transaction_date === dateFilter) {
+      await loadTransactions(dateFilter);
+    } else {
+      setDateFilter(values.transaction_date);
+    }
   }
 
-  const filtered = transactions.filter((t) => t.transaction_date === dateFilter);
-  const dailyTotal = filtered.reduce((sum, t) => sum + t.quantity * t.unit_price, 0);
+  const dailyTotal = sumSalesTotal(transactions);
 
   return (
     <>
@@ -130,7 +160,7 @@ export function SalesClient() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {MOCK_PRODUCTS.map((p) => (
+                            {initialProducts.map((p) => (
                               <SelectItem key={p.id} value={p.id}>
                                 {p.name} — {formatCurrency(p.price)}
                               </SelectItem>
@@ -190,11 +220,6 @@ export function SalesClient() {
         }
       />
 
-      <div className="glass rounded-[22px] border-2 border-dashed border-brand/40 bg-brand/5 p-4 text-sm text-muted-ink">
-        Halaman ini masih pratinjau tampilan — data belum tersambung ke database. Lihat{" "}
-        <code className="text-xs">docs/stage-9-retail-financial-operations-plan.md</code>.
-      </div>
-
       <div className="glass rounded-[22px] p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -228,22 +253,17 @@ export function SalesClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((t) => {
-                const product = productById.get(t.product_id);
-                return (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-medium">{product?.name ?? "-"}</TableCell>
-                    <TableCell>{product?.category ?? "-"}</TableCell>
-                    <TableCell className="text-right">{t.quantity}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(t.unit_price)}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(t.quantity * t.unit_price)}
-                    </TableCell>
-                    <TableCell className="text-muted-ink">{t.notes ?? "-"}</TableCell>
-                  </TableRow>
-                );
-              })}
-              {filtered.length === 0 && (
+              {transactions.map((t) => (
+                <TableRow key={t.id}>
+                  <TableCell className="font-medium">{t.products?.name ?? "-"}</TableCell>
+                  <TableCell>{t.products?.category ?? "-"}</TableCell>
+                  <TableCell className="text-right">{t.quantity}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(t.unit_price)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(t.total)}</TableCell>
+                  <TableCell className="text-muted-ink">{t.notes ?? "-"}</TableCell>
+                </TableRow>
+              ))}
+              {transactions.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-ink">
                     Belum ada penjualan tercatat untuk tanggal ini.

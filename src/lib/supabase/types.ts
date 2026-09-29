@@ -103,6 +103,64 @@ export interface Booking {
   updated_by: string | null;
 }
 
+export interface Product {
+  id: string;
+  name: string;
+  category: string | null;
+  price: number;
+  unit: string;
+  status: AreaStatus;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+}
+
+export interface ExpenseItem {
+  id: string;
+  name: string;
+  category: string | null;
+  unit: string;
+  default_price: number | null;
+  status: AreaStatus;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+}
+
+export interface SalesTransaction {
+  id: string;
+  product_id: string;
+  quantity: number;
+  unit_price: number;
+  total: number;
+  transaction_date: string;
+  notes: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+  products?: { name: string; category: string | null } | null;
+}
+
+export interface ExpenseTransaction {
+  id: string;
+  expense_item_id: string;
+  quantity: number;
+  unit_price: number;
+  total: number;
+  transaction_date: string;
+  notes: string | null;
+  deleted_at: string | null;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+  updated_by: string | null;
+  expense_items?: { name: string; category: string | null; unit: string } | null;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -113,6 +171,18 @@ export interface Database {
       business_hours: { Row: BusinessHour; Insert: Partial<BusinessHour>; Update: Partial<BusinessHour> };
       schedules: { Row: Schedule; Insert: Partial<Schedule>; Update: Partial<Schedule> };
       bookings: { Row: Booking; Insert: Partial<Booking>; Update: Partial<Booking> };
+      products: { Row: Product; Insert: Partial<Product>; Update: Partial<Product> };
+      expense_items: { Row: ExpenseItem; Insert: Partial<ExpenseItem>; Update: Partial<ExpenseItem> };
+      sales_transactions: {
+        Row: SalesTransaction;
+        Insert: Partial<SalesTransaction>;
+        Update: Partial<SalesTransaction>;
+      };
+      expense_transactions: {
+        Row: ExpenseTransaction;
+        Insert: Partial<ExpenseTransaction>;
+        Update: Partial<ExpenseTransaction>;
+      };
     };
   };
 }

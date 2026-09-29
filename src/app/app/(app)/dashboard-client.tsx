@@ -6,10 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency, formatTime } from "@/lib/format";
-import {
-  MOCK_EXPENSE_TRANSACTIONS,
-  MOCK_SALES_TRANSACTIONS,
-} from "@/lib/retail-mock-data";
 
 const TYPE_LABEL_ID: Record<string, string> = {
   internal_activity: "Aktivitas Internal",
@@ -48,6 +44,8 @@ export function DashboardClient({
   todaySchedules,
   upcomingSchedules,
   conflicts,
+  todayOmzet,
+  todayExpenses,
 }: {
   areaCount: number;
   activeAreaCount: number;
@@ -59,20 +57,10 @@ export function DashboardClient({
   todaySchedules: ScheduleRow[];
   upcomingSchedules: ScheduleRow[];
   conflicts: { a: ScheduleRow; b: ScheduleRow }[];
+  todayOmzet: number;
+  todayExpenses: number;
 }) {
   const { fullName } = useAuth();
-
-  // Preview-only: computed from src/lib/retail-mock-data.ts, not real
-  // sales/expense transactions yet. See
-  // docs/stage-9-retail-financial-operations-plan.md.
-  const todayOmzet = MOCK_SALES_TRANSACTIONS.reduce(
-    (sum, t) => sum + t.quantity * t.unit_price,
-    0,
-  );
-  const todayExpenses = MOCK_EXPENSE_TRANSACTIONS.reduce(
-    (sum, t) => sum + t.quantity * t.unit_price,
-    0,
-  );
   const estimatedProfit = todayOmzet - todayExpenses;
 
   return (
@@ -124,11 +112,8 @@ export function DashboardClient({
       </div>
 
       <div>
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3">
           <p className="font-semibold">Ringkasan Finansial Hari Ini</p>
-          <span className="rounded-full bg-brand/10 px-3 py-1 text-xs font-medium text-brand-ink">
-            Pratinjau — data contoh
-          </span>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard label="Omzet" value={formatCurrency(todayOmzet)} />

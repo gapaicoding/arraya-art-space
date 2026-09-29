@@ -1,17 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { formatCurrency, formatDateOnly } from "@/lib/format";
-import {
-  MOCK_EXPENSE_ITEMS,
-  MOCK_EXPENSE_TRANSACTIONS,
-  type ExpenseTransaction,
-} from "@/lib/retail-mock-data";
+import { sumExpenseTotal } from "@/lib/expenses";
+import { createClient } from "@/lib/supabase/client";
+import type { ExpenseItem, ExpenseTransaction } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -56,18 +54,43 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-function today() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-export function ExpensesClient() {
-  const [transactions, setTransactions] = useState<ExpenseTransaction[]>(
-    MOCK_EXPENSE_TRANSACTIONS,
-  );
-  const [dateFilter, setDateFilter] = useState(today());
+export function ExpensesClient({
+  initialItems,
+  initialTransactions,
+  initialDate,
+}: {
+  initialItems: ExpenseItem[];
+  initialTransactions: ExpenseTransaction[];
+  initialDate: string;
+}) {
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [dateFilter, setDateFilter] = useState(initialDate);
   const [open, setOpen] = useState(false);
 
-  const itemById = useMemo(() => new Map(MOCK_EXPENSE_ITEMS.map((i) => [i.id, i])), []);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    loadTransactions(dateFilter);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateFilter]);
+
+  async function loadTransactions(date: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("expense_transactions")
+      .select("*, expense_items(name, category, unit)")
+      .eq("transaction_date", date)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+    if (error) {
+      toast.error("Gagal memuat data: " + error.message);
+      return;
+    }
+    setTransactions((data as any) ?? []);
+  }
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -75,7 +98,7 @@ export function ExpensesClient() {
       expense_item_id: "",
       quantity: 1,
       unit_price: 0,
-      transaction_date: today(),
+      transaction_date: dateFilter,
       notes: "",
     },
   });
@@ -95,28 +118,35 @@ export function ExpensesClient() {
     form.setValue("expense_item_id", itemId);
     // Prefill with the catalog's reference price, but it stays editable —
     // actual purchase price can differ (bahan naik-turun harga).
-    const item = itemById.get(itemId);
+    const item = initialItems.find((i) => i.id === itemId);
     if (item?.default_price) {
       form.setValue("unit_price", item.default_price);
     }
   }
 
-  function onSubmit(values: FormValues) {
-    const newTransaction: ExpenseTransaction = {
-      id: crypto.randomUUID(),
+  async function onSubmit(values: FormValues) {
+    const supabase = createClient();
+    const { error } = await supabase.from("expense_transactions").insert({
       expense_item_id: values.expense_item_id,
       quantity: values.quantity,
       unit_price: values.unit_price,
       transaction_date: values.transaction_date,
       notes: values.notes || null,
-    };
-    setTransactions((prev) => [newTransaction, ...prev]);
-    toast.success("Pengeluaran dicatat (preview — belum tersimpan ke database)");
+    });
+    if (error) {
+      toast.error("Gagal mencatat pengeluaran: " + error.message);
+      return;
+    }
+    toast.success("Pengeluaran dicatat");
     setOpen(false);
+    if (values.transaction_date === dateFilter) {
+      await loadTransactions(dateFilter);
+    } else {
+      setDateFilter(values.transaction_date);
+    }
   }
 
-  const filtered = transactions.filter((t) => t.transaction_date === dateFilter);
-  const dailyTotal = filtered.reduce((sum, t) => sum + t.quantity * t.unit_price, 0);
+  const dailyTotal = sumExpenseTotal(transactions);
 
   return (
     <>
@@ -147,7 +177,7 @@ export function ExpensesClient() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {MOCK_EXPENSE_ITEMS.map((i) => (
+                            {initialItems.map((i) => (
                               <SelectItem key={i.id} value={i.id}>
                                 {i.name} ({i.unit})
                               </SelectItem>
@@ -220,11 +250,6 @@ export function ExpensesClient() {
         }
       />
 
-      <div className="glass rounded-[22px] border-2 border-dashed border-brand/40 bg-brand/5 p-4 text-sm text-muted-ink">
-        Halaman ini masih pratinjau tampilan — data belum tersambung ke database. Lihat{" "}
-        <code className="text-xs">docs/stage-9-retail-financial-operations-plan.md</code>.
-      </div>
-
       <div className="glass rounded-[22px] p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -258,24 +283,19 @@ export function ExpensesClient() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((t) => {
-                const item = itemById.get(t.expense_item_id);
-                return (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-medium">{item?.name ?? "-"}</TableCell>
-                    <TableCell>{item?.category ?? "-"}</TableCell>
-                    <TableCell className="text-right">
-                      {t.quantity} {item?.unit}
-                    </TableCell>
-                    <TableCell className="text-right">{formatCurrency(t.unit_price)}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(t.quantity * t.unit_price)}
-                    </TableCell>
-                    <TableCell className="text-muted-ink">{t.notes ?? "-"}</TableCell>
-                  </TableRow>
-                );
-              })}
-              {filtered.length === 0 && (
+              {transactions.map((t) => (
+                <TableRow key={t.id}>
+                  <TableCell className="font-medium">{t.expense_items?.name ?? "-"}</TableCell>
+                  <TableCell>{t.expense_items?.category ?? "-"}</TableCell>
+                  <TableCell className="text-right">
+                    {t.quantity} {t.expense_items?.unit}
+                  </TableCell>
+                  <TableCell className="text-right">{formatCurrency(t.unit_price)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(t.total)}</TableCell>
+                  <TableCell className="text-muted-ink">{t.notes ?? "-"}</TableCell>
+                </TableRow>
+              ))}
+              {transactions.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center text-muted-ink">
                     Belum ada pengeluaran tercatat untuk tanggal ini.

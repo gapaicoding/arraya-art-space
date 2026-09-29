@@ -28,6 +28,8 @@ const linkGroups: { heading: string; items: LinkItem[] }[] = [
       { href: "/app/organizers", label: "Organizer & PIC", minRole: "admin" as const },
       { href: "/app/activities", label: "Jenis Kegiatan & Kategori", minRole: "admin" as const },
       { href: "/app/areas", label: "Area", minRole: "admin" as const },
+      { href: "/app/products", label: "Produk", minRole: "admin" as const },
+      { href: "/app/expense-items", label: "Katalog Bahan", minRole: "admin" as const },
       { href: "/app/settings/users", label: "Pengguna", minRole: "super_admin" as const },
     ],
   },
