@@ -1,4 +1,4 @@
-export type ProfileRole = "admin" | "staff";
+export type ProfileRole = "super_admin" | "admin" | "staff";
 export type AreaStatus = "active" | "inactive";
 export type OrganizerType = "internal" | "external";
 export type ScheduleType = "internal_activity" | "external_booking" | "blocked";

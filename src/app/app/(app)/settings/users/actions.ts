@@ -3,12 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { wouldLeaveZeroActiveAdmins, type ManagedUserRow } from "@/lib/user-management";
+import { wouldLeaveZeroActiveSuperAdmins, type ManagedUserRow } from "@/lib/user-management";
 import { logError } from "@/lib/logger";
+import type { ProfileRole } from "@/lib/supabase/types";
 
 type ActionResult = { error?: string };
 
-async function requireAdmin() {
+async function requireSuperAdmin() {
   const supabase = await createClient();
   const { data: auth } = await supabase.auth.getUser();
   if (!auth.user) return { ok: false as const, error: "Sesi tidak valid." };
@@ -19,8 +20,8 @@ async function requireAdmin() {
     .eq("id", auth.user.id)
     .single();
 
-  if (!profile || profile.role !== "admin") {
-    return { ok: false as const, error: "Hanya admin yang bisa mengelola pengguna." };
+  if (!profile || profile.role !== "super_admin") {
+    return { ok: false as const, error: "Hanya Super Admin yang bisa mengelola pengguna." };
   }
   return { ok: true as const, userId: auth.user.id };
 }
@@ -35,9 +36,9 @@ export async function createUserAction(
   fullName: string,
   email: string,
   password: string,
-  role: "admin" | "staff",
+  role: ProfileRole,
 ): Promise<ActionResult> {
-  const auth = await requireAdmin();
+  const auth = await requireSuperAdmin();
   if (!auth.ok) return { error: auth.error };
 
   const admin = createAdminClient();
@@ -66,9 +67,9 @@ export async function createUserAction(
 
 export async function updateUserRoleAction(
   userId: string,
-  role: "admin" | "staff",
+  role: ProfileRole,
 ): Promise<ActionResult> {
-  const auth = await requireAdmin();
+  const auth = await requireSuperAdmin();
   if (!auth.ok) return { error: auth.error };
 
   if (userId === auth.userId) {
@@ -76,8 +77,8 @@ export async function updateUserRoleAction(
   }
 
   const users = await getAllUsers();
-  if (wouldLeaveZeroActiveAdmins(users, userId, { role })) {
-    return { error: "Aksi ini akan membuat sistem tanpa admin aktif sama sekali." };
+  if (wouldLeaveZeroActiveSuperAdmins(users, userId, { role })) {
+    return { error: "Aksi ini akan membuat sistem tanpa Super Admin aktif sama sekali." };
   }
 
   const admin = createAdminClient();
@@ -95,7 +96,7 @@ export async function toggleUserActiveAction(
   userId: string,
   isActive: boolean,
 ): Promise<ActionResult> {
-  const auth = await requireAdmin();
+  const auth = await requireSuperAdmin();
   if (!auth.ok) return { error: auth.error };
 
   if (userId === auth.userId) {
@@ -103,8 +104,8 @@ export async function toggleUserActiveAction(
   }
 
   const users = await getAllUsers();
-  if (wouldLeaveZeroActiveAdmins(users, userId, { is_active: isActive })) {
-    return { error: "Aksi ini akan membuat sistem tanpa admin aktif sama sekali." };
+  if (wouldLeaveZeroActiveSuperAdmins(users, userId, { is_active: isActive })) {
+    return { error: "Aksi ini akan membuat sistem tanpa Super Admin aktif sama sekali." };
   }
 
   const admin = createAdminClient();
@@ -133,7 +134,7 @@ export async function resetUserPasswordAction(
   userId: string,
   newPassword: string,
 ): Promise<ActionResult> {
-  const auth = await requireAdmin();
+  const auth = await requireSuperAdmin();
   if (!auth.ok) return { error: auth.error };
 
   const admin = createAdminClient();

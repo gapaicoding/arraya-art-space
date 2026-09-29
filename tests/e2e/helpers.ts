@@ -1,7 +1,7 @@
 import type { Page } from "@playwright/test";
-import { ADMIN_EMAIL, STAFF_EMAIL, TEST_PASSWORD } from "./supabase-admin";
+import { SUPER_ADMIN_EMAIL, ADMIN_EMAIL, STAFF_EMAIL, TEST_PASSWORD } from "./supabase-admin";
 
-export { ADMIN_EMAIL, STAFF_EMAIL, TEST_PASSWORD };
+export { SUPER_ADMIN_EMAIL, ADMIN_EMAIL, STAFF_EMAIL, TEST_PASSWORD };
 
 export async function login(page: Page, email: string, password = TEST_PASSWORD) {
   await page.goto("/login");
@@ -29,6 +29,10 @@ export async function login(page: Page, email: string, password = TEST_PASSWORD)
   // get killed mid-flight ("interrupted by another navigation") in WebKit.
   // A short real wait avoids the race.
   await page.waitForTimeout(500);
+}
+
+export async function loginAsSuperAdmin(page: Page) {
+  await login(page, SUPER_ADMIN_EMAIL);
 }
 
 export async function loginAsAdmin(page: Page) {

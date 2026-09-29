@@ -5,32 +5,33 @@ import { PageHeader } from "@/components/AppShell";
 import { logoutAction } from "@/app/app/(app)/actions";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
+import { meetsMinRole } from "@/lib/permissions";
 
 const linkGroups = [
   {
-    heading: "Operasional",
-    items: [{ href: "/app/analytics", label: "Analytic", adminOnly: true }],
+    heading: "Ringkasan & Analitik",
+    items: [{ href: "/app/analytics", label: "Analytic", minRole: "admin" as const }],
   },
   {
     heading: "Pengaturan",
     items: [
-      { href: "/app/settings/business-hours", label: "Jam Operasional", adminOnly: true },
-      { href: "/app/organizers", label: "Organizer & PIC", adminOnly: true },
-      { href: "/app/activities", label: "Jenis Kegiatan & Kategori", adminOnly: true },
-      { href: "/app/areas", label: "Area", adminOnly: true },
-      { href: "/app/settings/users", label: "Pengguna", adminOnly: true },
+      { href: "/app/settings/business-hours", label: "Jam Operasional", minRole: "admin" as const },
+      { href: "/app/organizers", label: "Organizer & PIC", minRole: "admin" as const },
+      { href: "/app/activities", label: "Jenis Kegiatan & Kategori", minRole: "admin" as const },
+      { href: "/app/areas", label: "Area", minRole: "admin" as const },
+      { href: "/app/settings/users", label: "Pengguna", minRole: "super_admin" as const },
     ],
   },
 ];
 
 export default function MorePage() {
-  const { isAdmin } = useAuth();
+  const auth = useAuth();
 
   return (
     <>
       <PageHeader title="Lainnya" subtitle="Master data & pengaturan" />
       {linkGroups.map((group) => {
-        const items = group.items.filter((l) => !("adminOnly" in l && l.adminOnly) || isAdmin);
+        const items = group.items.filter((l) => meetsMinRole(auth, l.minRole));
         if (items.length === 0) return null;
         return (
           <div key={group.heading} className="glass rounded-[22px] p-2">

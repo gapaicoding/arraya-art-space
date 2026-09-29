@@ -2,17 +2,17 @@
 
 import { createContext, useContext } from "react";
 import type { ProfileRole } from "@/lib/supabase/types";
+import { getRolePermissions, type AppPermissions } from "@/lib/permissions";
 
-export interface AuthContextValue {
+export interface AuthContextValue extends AppPermissions {
   fullName: string | null;
   role: ProfileRole | null;
-  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue>({
   fullName: null,
   role: null,
-  isAdmin: false,
+  ...getRolePermissions(null),
 });
 
 export function AuthProvider({

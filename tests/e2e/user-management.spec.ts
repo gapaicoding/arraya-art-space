@@ -1,5 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { loginAsAdmin, loginAsStaff, login, logout, ADMIN_EMAIL } from "./helpers";
+import {
+  loginAsSuperAdmin,
+  loginAsAdmin,
+  loginAsStaff,
+  login,
+  logout,
+  SUPER_ADMIN_EMAIL,
+} from "./helpers";
 import { adminClient } from "./supabase-admin";
 
 const NEW_USER_EMAIL = "e2e-test-um-newuser@arayya.test";
@@ -55,8 +62,14 @@ test.describe("User management", () => {
     await expect(page).toHaveURL("/app");
   });
 
-  test("admin creates a new user who can log in immediately", async ({ page }) => {
+  test("admin (not super admin) cannot access the users settings page", async ({ page }) => {
     await loginAsAdmin(page);
+    await page.goto("/app/settings/users");
+    await expect(page).toHaveURL("/app");
+  });
+
+  test("super admin creates a new user who can log in immediately", async ({ page }) => {
+    await loginAsSuperAdmin(page);
     await page.goto("/app/settings/users");
 
     await page.getByRole("button", { name: "+ User Baru" }).click();
@@ -80,7 +93,7 @@ test.describe("User management", () => {
     await expect(page).toHaveURL("/app");
   });
 
-  test("admin can change another user's role, deactivate, and reset password via the UI", async ({
+  test("super admin can change another user's role, deactivate, and reset password via the UI", async ({
     page,
   }) => {
     // Seed the target user directly (not through the UI) so this test is
@@ -97,7 +110,7 @@ test.describe("User management", () => {
       .update({ full_name: NEW_USER_NAME, role: "staff" })
       .eq("id", created.user.id);
 
-    await loginAsAdmin(page);
+    await loginAsSuperAdmin(page);
     await page.goto("/app/settings/users");
     const row = page.locator("tr", { hasText: NEW_USER_EMAIL });
     await expect(row).toBeVisible();
@@ -154,11 +167,11 @@ test.describe("User management", () => {
     expect(oldPasswordLogin.status).toBe(400);
   });
 
-  test("admin cannot change their own role or deactivate themselves", async ({ page }) => {
-    await loginAsAdmin(page);
+  test("super admin cannot change their own role or deactivate themselves", async ({ page }) => {
+    await loginAsSuperAdmin(page);
     await page.goto("/app/settings/users");
 
-    const selfRow = page.locator("tr", { hasText: ADMIN_EMAIL });
+    const selfRow = page.locator("tr", { hasText: SUPER_ADMIN_EMAIL });
     await expect(selfRow.getByRole("combobox")).toBeDisabled();
     await expect(selfRow.getByRole("switch")).toBeDisabled();
   });

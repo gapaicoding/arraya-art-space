@@ -64,7 +64,7 @@ const createSchema = z.object({
   full_name: z.string().min(1, "Nama wajib diisi"),
   email: z.string().email("Email tidak valid"),
   password: z.string().min(6, "Password minimal 6 karakter"),
-  role: z.enum(["admin", "staff"]),
+  role: z.enum(["super_admin", "admin", "staff"]),
 });
 type CreateFormValues = z.infer<typeof createSchema>;
 
@@ -177,7 +177,7 @@ export function UsersClient({
     ]);
   }
 
-  async function onRoleChange(u: Profile, role: "admin" | "staff") {
+  async function onRoleChange(u: Profile, role: "super_admin" | "admin" | "staff") {
     const result = await updateUserRoleAction(u.id, role);
     if (result.error) {
       toast.error(result.error);
@@ -276,6 +276,7 @@ export function UsersClient({
                         <SelectContent>
                           <SelectItem value="staff">Staff</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="super_admin">Super Admin</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -325,7 +326,9 @@ export function UsersClient({
                       <Select
                         value={u.role}
                         disabled={isSelf}
-                        onValueChange={(value) => onRoleChange(u, value as "admin" | "staff")}
+                        onValueChange={(value) =>
+                          onRoleChange(u, value as "super_admin" | "admin" | "staff")
+                        }
                       >
                         <SelectTrigger className="w-32">
                           <SelectValue />
@@ -333,6 +336,7 @@ export function UsersClient({
                         <SelectContent>
                           <SelectItem value="staff">Staff</SelectItem>
                           <SelectItem value="admin">Admin</SelectItem>
+                          <SelectItem value="super_admin">Super Admin</SelectItem>
                         </SelectContent>
                       </Select>
                     </TableCell>
