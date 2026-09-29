@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { PageHeader, PrimaryButton } from "@/components/AppShell";
+import { InputterBanner } from "@/components/InputterBanner";
+import { useInputterSession } from "@/hooks/use-inputter-session";
 import { formatCurrency, formatDateOnly } from "@/lib/format";
 import { sumSalesTotal } from "@/lib/sales";
 import { createClient } from "@/lib/supabase/client";
@@ -65,6 +67,7 @@ export function SalesClient({
   const [transactions, setTransactions] = useState(initialTransactions);
   const [dateFilter, setDateFilter] = useState(initialDate);
   const [open, setOpen] = useState(false);
+  const { inputterName, hydrated, setInputterName } = useInputterSession();
 
   const isFirstRender = useRef(true);
   useEffect(() => {
@@ -103,7 +106,7 @@ export function SalesClient({
 
   async function onSubmit(values: FormValues) {
     const product = initialProducts.find((p) => p.id === values.product_id);
-    if (!product) return;
+    if (!product || !inputterName) return;
 
     const supabase = createClient();
     const { error } = await supabase.from("sales_transactions").insert({
@@ -115,6 +118,7 @@ export function SalesClient({
       unit_price: product.price,
       transaction_date: values.transaction_date,
       notes: values.notes || null,
+      inputter_name: inputterName,
     });
     if (error) {
       toast.error("Gagal mencatat penjualan: " + error.message);
@@ -139,7 +143,9 @@ export function SalesClient({
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <PrimaryButton onClick={openCreate}>+ Catat Penjualan</PrimaryButton>
+              <PrimaryButton onClick={openCreate} disabled={!inputterName}>
+                + Catat Penjualan
+              </PrimaryButton>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -220,6 +226,8 @@ export function SalesClient({
         }
       />
 
+      <InputterBanner inputterName={inputterName} hydrated={hydrated} onSetName={setInputterName} />
+
       <div className="glass rounded-[22px] p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -249,6 +257,7 @@ export function SalesClient({
                 <TableHead className="text-right">Qty</TableHead>
                 <TableHead className="text-right">Harga Satuan</TableHead>
                 <TableHead className="text-right">Subtotal</TableHead>
+                <TableHead>Penginput</TableHead>
                 <TableHead>Catatan</TableHead>
               </TableRow>
             </TableHeader>
@@ -260,12 +269,13 @@ export function SalesClient({
                   <TableCell className="text-right">{t.quantity}</TableCell>
                   <TableCell className="text-right">{formatCurrency(t.unit_price)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(t.total)}</TableCell>
+                  <TableCell>{t.inputter_name}</TableCell>
                   <TableCell className="text-muted-ink">{t.notes ?? "-"}</TableCell>
                 </TableRow>
               ))}
               {transactions.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-ink">
+                  <TableCell colSpan={7} className="text-center text-muted-ink">
                     Belum ada penjualan tercatat untuk tanggal ini.
                   </TableCell>
                 </TableRow>

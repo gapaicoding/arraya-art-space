@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { PageHeader, PrimaryButton } from "@/components/AppShell";
+import { InputterBanner } from "@/components/InputterBanner";
+import { useInputterSession } from "@/hooks/use-inputter-session";
 import { formatCurrency, formatDateOnly } from "@/lib/format";
 import { sumExpenseTotal } from "@/lib/expenses";
 import { createClient } from "@/lib/supabase/client";
@@ -66,6 +68,7 @@ export function ExpensesClient({
   const [transactions, setTransactions] = useState(initialTransactions);
   const [dateFilter, setDateFilter] = useState(initialDate);
   const [open, setOpen] = useState(false);
+  const { inputterName, hydrated, setInputterName } = useInputterSession();
 
   const isFirstRender = useRef(true);
   useEffect(() => {
@@ -125,6 +128,7 @@ export function ExpensesClient({
   }
 
   async function onSubmit(values: FormValues) {
+    if (!inputterName) return;
     const supabase = createClient();
     const { error } = await supabase.from("expense_transactions").insert({
       expense_item_id: values.expense_item_id,
@@ -132,6 +136,7 @@ export function ExpensesClient({
       unit_price: values.unit_price,
       transaction_date: values.transaction_date,
       notes: values.notes || null,
+      inputter_name: inputterName,
     });
     if (error) {
       toast.error("Gagal mencatat pengeluaran: " + error.message);
@@ -156,7 +161,9 @@ export function ExpensesClient({
         action={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-              <PrimaryButton onClick={openCreate}>+ Catat Pengeluaran</PrimaryButton>
+              <PrimaryButton onClick={openCreate} disabled={!inputterName}>
+                + Catat Pengeluaran
+              </PrimaryButton>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
@@ -250,6 +257,8 @@ export function ExpensesClient({
         }
       />
 
+      <InputterBanner inputterName={inputterName} hydrated={hydrated} onSetName={setInputterName} />
+
       <div className="glass rounded-[22px] p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -279,6 +288,7 @@ export function ExpensesClient({
                 <TableHead className="text-right">Qty</TableHead>
                 <TableHead className="text-right">Harga Satuan</TableHead>
                 <TableHead className="text-right">Subtotal</TableHead>
+                <TableHead>Penginput</TableHead>
                 <TableHead>Catatan</TableHead>
               </TableRow>
             </TableHeader>
@@ -292,12 +302,13 @@ export function ExpensesClient({
                   </TableCell>
                   <TableCell className="text-right">{formatCurrency(t.unit_price)}</TableCell>
                   <TableCell className="text-right">{formatCurrency(t.total)}</TableCell>
+                  <TableCell>{t.inputter_name}</TableCell>
                   <TableCell className="text-muted-ink">{t.notes ?? "-"}</TableCell>
                 </TableRow>
               ))}
               {transactions.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-ink">
+                  <TableCell colSpan={7} className="text-center text-muted-ink">
                     Belum ada pengeluaran tercatat untuk tanggal ini.
                   </TableCell>
                 </TableRow>
