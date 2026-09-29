@@ -51,6 +51,7 @@ export interface Activity {
   default_duration_minutes: number;
   organizer_id: string | null;
   capacity_recommendation: number | null;
+  product_id: string | null;
   status: AreaStatus;
   created_at: string;
   updated_at: string;

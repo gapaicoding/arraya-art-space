@@ -8,7 +8,8 @@ import { toast } from "sonner";
 import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase/client";
-import type { Activity, Organizer } from "@/lib/supabase/types";
+import { formatCurrency } from "@/lib/format";
+import type { Activity, Organizer, Product } from "@/lib/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -52,6 +53,7 @@ const schema = z.object({
   description: z.string().optional(),
   default_duration_minutes: z.coerce.number().int().positive("Durasi harus > 0"),
   organizer_id: z.string().optional(),
+  product_id: z.string().optional(),
   capacity_recommendation: z.coerce.number().int().positive().optional().or(z.literal(undefined)),
   status: z.enum(["active", "inactive"]),
 });
@@ -64,10 +66,12 @@ export function ActivitiesClient({
   initialActivities,
   initialCount,
   organizers,
+  products,
 }: {
   initialActivities: Activity[];
   initialCount: number;
   organizers: Organizer[];
+  products: Product[];
 }) {
   const { isAdmin } = useAuth();
   const [activities, setActivities] = useState(initialActivities);
@@ -124,6 +128,7 @@ export function ActivitiesClient({
       description: "",
       default_duration_minutes: 60,
       organizer_id: NONE,
+      product_id: NONE,
       status: "active",
     },
   });
@@ -136,6 +141,7 @@ export function ActivitiesClient({
       description: "",
       default_duration_minutes: 60,
       organizer_id: NONE,
+      product_id: NONE,
       status: "active",
     });
     setOpen(true);
@@ -149,6 +155,7 @@ export function ActivitiesClient({
       description: a.description ?? "",
       default_duration_minutes: a.default_duration_minutes,
       organizer_id: a.organizer_id ?? NONE,
+      product_id: a.product_id ?? NONE,
       capacity_recommendation: a.capacity_recommendation ?? undefined,
       status: a.status,
     });
@@ -160,6 +167,7 @@ export function ActivitiesClient({
     const payload = {
       ...values,
       organizer_id: values.organizer_id === NONE ? null : values.organizer_id,
+      product_id: values.product_id === NONE ? null : values.product_id,
       capacity_recommendation: values.capacity_recommendation ?? null,
     };
     if (editing) {
@@ -273,6 +281,34 @@ export function ActivitiesClient({
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="product_id"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Produk Terkait (opsional)</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value={NONE}>Tidak ada</SelectItem>
+                            {products.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.name} — {formatCurrency(p.price)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <p className="text-xs text-muted-ink">
+                          Menampilkan harga di halaman detail event publik.
+                        </p>
                         <FormMessage />
                       </FormItem>
                     )}

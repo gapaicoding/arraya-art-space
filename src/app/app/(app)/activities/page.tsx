@@ -7,6 +7,7 @@ export default async function ActivitiesPage() {
   const [
     { data: activities, count, error: activitiesError },
     { data: organizers, error: organizersError },
+    { data: products, error: productsError },
   ] = await Promise.all([
     supabase
       .from("activities")
@@ -16,15 +17,18 @@ export default async function ActivitiesPage() {
       .limit(PAGE_SIZE),
     // Full list, not paginated — used as dropdown options in the form, not the table.
     supabase.from("organizers").select("*").order("name", { ascending: true }),
+    supabase.from("products").select("*").eq("status", "active").order("name", { ascending: true }),
   ]);
   if (activitiesError) logError("activities-page-fetch", activitiesError);
   if (organizersError) logError("activities-page-organizers-fetch", organizersError);
+  if (productsError) logError("activities-page-products-fetch", productsError);
 
   return (
     <ActivitiesClient
       initialActivities={activities ?? []}
       initialCount={count ?? 0}
       organizers={organizers ?? []}
+      products={products ?? []}
     />
   );
 }
