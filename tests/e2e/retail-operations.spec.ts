@@ -2,15 +2,16 @@ import { test, expect, type Page } from "@playwright/test";
 import { loginAsAdmin, loginAsStaff, logout, TEST_PREFIX } from "./helpers";
 
 /**
- * Fills the inline "Nama Penginput" field at the top of Rekap
- * Penjualan/Pengeluaran and saves it. Not a dialog — this is a standard
- * page field, remembered per browser context (localStorage) once saved.
+ * Reveals and fills the inline inputter-name editor (via the "Isi/Ganti
+ * Nama Penginput" button) at the top of Rekap Penjualan/Pengeluaran, then
+ * saves it. Not a dialog — remembered per browser context (localStorage)
+ * once saved.
  */
 async function setInputterName(page: Page, name: string) {
-  const input = page.getByLabel("Nama Penginput");
-  await input.fill(name);
+  await page.getByRole("button", { name: /Nama Penginput/ }).click();
+  await page.getByPlaceholder("Ketik nama penginput...").fill(name);
   await page.getByRole("button", { name: "Simpan" }).click();
-  await expect(input).toHaveValue(name);
+  await expect(page.getByText(name, { exact: true })).toBeVisible();
 }
 
 test.describe("Stage 9 — Rekap Penjualan & Pengeluaran", () => {
@@ -57,15 +58,16 @@ test.describe("Stage 9 — Rekap Penjualan & Pengeluaran", () => {
     await loginAsStaff(page);
     await page.goto("/app/sales");
     await setInputterName(page, `${TEST_PREFIX}First`);
+    await expect(page.getByText(`${TEST_PREFIX}First`, { exact: true })).toBeVisible();
 
     // Reload — remembered for this browser context (localStorage), no
     // re-prompt needed.
     await page.reload();
-    await expect(page.getByLabel("Nama Penginput")).toHaveValue(`${TEST_PREFIX}First`);
+    await expect(page.getByText(`${TEST_PREFIX}First`, { exact: true })).toBeVisible();
 
-    // Edited directly inline — no dialog involved.
+    // Edited directly inline via "Ganti Nama Penginput" — no dialog involved.
     await setInputterName(page, `${TEST_PREFIX}Second`);
-    await expect(page.getByLabel("Nama Penginput")).toHaveValue(`${TEST_PREFIX}Second`);
+    await expect(page.getByText(`${TEST_PREFIX}Second`, { exact: true })).toBeVisible();
   });
 
   test("all roles see the financial summary on Dashboard", async ({ page }) => {

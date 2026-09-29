@@ -59,10 +59,12 @@ export function SalesClient({
   initialProducts,
   initialTransactions,
   initialDate,
+  lastInputter,
 }: {
   initialProducts: Product[];
   initialTransactions: SalesTransaction[];
   initialDate: string;
+  lastInputter: { inputter_name: string; created_at: string } | null;
 }) {
   const [transactions, setTransactions] = useState(initialTransactions);
   const [dateFilter, setDateFilter] = useState(initialDate);
@@ -134,6 +136,10 @@ export function SalesClient({
   }
 
   const dailyTotal = sumSalesTotal(transactions);
+  const inputterHistory = transactions.map((t) => ({
+    name: t.inputter_name,
+    created_at: t.created_at,
+  }));
 
   return (
     <>
@@ -226,7 +232,18 @@ export function SalesClient({
         }
       />
 
-      <InputterBanner inputterName={inputterName} hydrated={hydrated} onSetName={setInputterName} />
+      <InputterBanner
+        label="Penginput Penjualan"
+        inputterName={inputterName}
+        hydrated={hydrated}
+        onSetName={setInputterName}
+        lastInputter={
+          lastInputter
+            ? { name: lastInputter.inputter_name, created_at: lastInputter.created_at }
+            : null
+        }
+        history={inputterHistory}
+      />
 
       <div className="glass rounded-[22px] p-4">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
