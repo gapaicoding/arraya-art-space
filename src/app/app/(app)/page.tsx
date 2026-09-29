@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import { logError } from "@/lib/logger";
 import { computeScheduleConflicts } from "@/lib/conflicts";
+import { sumSalesTotal } from "@/lib/sales";
+import { sumExpenseTotal } from "@/lib/expenses";
 import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage() {
@@ -14,6 +16,8 @@ export default async function DashboardPage() {
     { data: todaySchedules, error: todaySchedulesError },
     { data: todayBookings, error: todayBookingsError },
     { data: upcomingSchedules, error: upcomingSchedulesError },
+    { data: todaySales, error: todaySalesError },
+    { data: todayExpenses, error: todayExpensesError },
   ] = await Promise.all([
     supabase.from("areas").select("*", { count: "exact", head: true }),
     supabase.from("areas").select("*", { count: "exact", head: true }).eq("status", "active"),
@@ -32,6 +36,16 @@ export default async function DashboardPage() {
       .order("date", { ascending: true })
       .order("start_at", { ascending: true })
       .limit(5),
+    supabase
+      .from("sales_transactions")
+      .select("total")
+      .eq("transaction_date", today)
+      .is("deleted_at", null),
+    supabase
+      .from("expense_transactions")
+      .select("total")
+      .eq("transaction_date", today)
+      .is("deleted_at", null),
   ]);
   for (const [scope, error] of [
     ["dashboard-area-count", areaCountError],
@@ -39,9 +53,14 @@ export default async function DashboardPage() {
     ["dashboard-today-schedules", todaySchedulesError],
     ["dashboard-today-bookings", todayBookingsError],
     ["dashboard-upcoming-schedules", upcomingSchedulesError],
+    ["dashboard-today-sales", todaySalesError],
+    ["dashboard-today-expenses", todayExpensesError],
   ] as const) {
     if (error) logError(scope, error);
   }
+
+  const todayOmzet = sumSalesTotal(todaySales ?? []);
+  const todayExpenseTotal = sumExpenseTotal(todayExpenses ?? []);
 
   const todayBookingCount = (todayBookings ?? []).filter(
     (b: any) => b.schedules?.date === today,
@@ -69,6 +88,8 @@ export default async function DashboardPage() {
       todaySchedules={schedulesToday as any}
       upcomingSchedules={(upcomingSchedules ?? []) as any}
       conflicts={conflicts as any}
+      todayOmzet={todayOmzet}
+      todayExpenses={todayExpenseTotal}
     />
   );
 }

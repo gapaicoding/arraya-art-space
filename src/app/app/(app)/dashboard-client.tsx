@@ -5,7 +5,7 @@ import { PageHeader, PrimaryButton } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth-context";
-import { formatTime } from "@/lib/format";
+import { formatCurrency, formatTime } from "@/lib/format";
 
 const TYPE_LABEL_ID: Record<string, string> = {
   internal_activity: "Aktivitas Internal",
@@ -44,6 +44,8 @@ export function DashboardClient({
   todaySchedules,
   upcomingSchedules,
   conflicts,
+  todayOmzet,
+  todayExpenses,
 }: {
   areaCount: number;
   activeAreaCount: number;
@@ -55,8 +57,11 @@ export function DashboardClient({
   todaySchedules: ScheduleRow[];
   upcomingSchedules: ScheduleRow[];
   conflicts: { a: ScheduleRow; b: ScheduleRow }[];
+  todayOmzet: number;
+  todayExpenses: number;
 }) {
   const { fullName } = useAuth();
+  const estimatedProfit = todayOmzet - todayExpenses;
 
   return (
     <>
@@ -104,6 +109,17 @@ export function DashboardClient({
         <StatCard label="Booking Hari Ini" value={todayBookingCount} />
         <StatCard label="Area Digunakan" value={areasInUseCount} />
         <StatCard label="Area Tersedia" value={areasAvailableCount} />
+      </div>
+
+      <div>
+        <div className="mb-3">
+          <p className="font-semibold">Ringkasan Finansial Hari Ini</p>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatCard label="Omzet" value={formatCurrency(todayOmzet)} />
+          <StatCard label="Pengeluaran" value={formatCurrency(todayExpenses)} />
+          <StatCard label="Estimasi Profit" value={formatCurrency(estimatedProfit)} />
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

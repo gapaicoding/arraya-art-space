@@ -7,7 +7,16 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { meetsMinRole } from "@/lib/permissions";
 
-const linkGroups = [
+type LinkItem = { href: string; label: string; minRole?: "admin" | "super_admin" };
+
+const linkGroups: { heading: string; items: LinkItem[] }[] = [
+  {
+    heading: "Operasional",
+    items: [
+      { href: "/app/sales", label: "Rekap Penjualan" },
+      { href: "/app/expenses", label: "Rekap Pengeluaran" },
+    ],
+  },
   {
     heading: "Ringkasan & Analitik",
     items: [{ href: "/app/analytics", label: "Analytic", minRole: "admin" as const }],
@@ -19,6 +28,8 @@ const linkGroups = [
       { href: "/app/organizers", label: "Organizer & PIC", minRole: "admin" as const },
       { href: "/app/activities", label: "Jenis Kegiatan & Kategori", minRole: "admin" as const },
       { href: "/app/areas", label: "Area", minRole: "admin" as const },
+      { href: "/app/products", label: "Produk", minRole: "admin" as const },
+      { href: "/app/expense-items", label: "Katalog Bahan", minRole: "admin" as const },
       { href: "/app/settings/users", label: "Pengguna", minRole: "super_admin" as const },
     ],
   },

@@ -1,7 +1,13 @@
 import type { Page } from "@playwright/test";
-import { SUPER_ADMIN_EMAIL, ADMIN_EMAIL, STAFF_EMAIL, TEST_PASSWORD } from "./supabase-admin";
+import {
+  SUPER_ADMIN_EMAIL,
+  ADMIN_EMAIL,
+  STAFF_EMAIL,
+  TEST_PASSWORD,
+  TEST_PREFIX,
+} from "./supabase-admin";
 
-export { SUPER_ADMIN_EMAIL, ADMIN_EMAIL, STAFF_EMAIL, TEST_PASSWORD };
+export { SUPER_ADMIN_EMAIL, ADMIN_EMAIL, STAFF_EMAIL, TEST_PASSWORD, TEST_PREFIX };
 
 export async function login(page: Page, email: string, password = TEST_PASSWORD) {
   await page.goto("/login");

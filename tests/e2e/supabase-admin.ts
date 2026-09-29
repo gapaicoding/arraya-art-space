@@ -111,4 +111,20 @@ export async function cleanupTestData() {
   await supabase.from("areas").delete().ilike("name", `${TEST_PREFIX}%`);
   await supabase.from("activities").delete().ilike("name", `${TEST_PREFIX}%`);
   await supabase.from("organizers").delete().ilike("name", `${TEST_PREFIX}%`);
+
+  // Stage 9 — sales/expense transactions are tagged via `notes` (they have
+  // no name column); products/expense_items created by tests use the same
+  // TEST_PREFIX convention as other master data.
+  await supabase.from("sales_transactions").delete().ilike("notes", `${TEST_PREFIX}%`);
+  await supabase.from("expense_transactions").delete().ilike("notes", `${TEST_PREFIX}%`);
+  const { data: testProducts } = await supabase
+    .from("products")
+    .select("id")
+    .ilike("name", `${TEST_PREFIX}%`);
+  const testProductIds = (testProducts ?? []).map((p) => p.id);
+  if (testProductIds.length > 0) {
+    await supabase.from("sales_transactions").delete().in("product_id", testProductIds);
+  }
+  await supabase.from("products").delete().ilike("name", `${TEST_PREFIX}%`);
+  await supabase.from("expense_items").delete().ilike("name", `${TEST_PREFIX}%`);
 }
