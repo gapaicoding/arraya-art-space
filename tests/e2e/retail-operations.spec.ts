@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { loginAsAdmin, loginAsStaff, logout, TEST_PREFIX } from "./helpers";
+import { loginAsSuperAdmin, loginAsAdmin, loginAsStaff, logout, TEST_PREFIX } from "./helpers";
 
 /**
  * Reveals and fills the inline inputter-name editor (via the "Isi/Ganti
@@ -68,6 +68,82 @@ test.describe("Stage 9 — Rekap Penjualan & Pengeluaran", () => {
     // Edited directly inline via "Ganti Nama Penginput" — no dialog involved.
     await setInputterName(page, `${TEST_PREFIX}Second`);
     await expect(page.getByText(`${TEST_PREFIX}Second`, { exact: true })).toBeVisible();
+  });
+
+  test("staff can edit their own sale, but archive/restore/hard-delete are hidden", async ({
+    page,
+  }) => {
+    await loginAsStaff(page);
+    await page.goto("/app/sales");
+    await setInputterName(page, `${TEST_PREFIX}EditFlow`);
+
+    await page.getByRole("button", { name: "+ Catat Penjualan" }).click();
+    let dialog = page.locator('[role="dialog"]');
+    await dialog.getByRole("combobox").click();
+    await page.getByRole("option", { name: "Melukis Kanvas Polos", exact: false }).first().click();
+    await dialog.getByLabel("Jumlah").fill("1");
+    await dialog.getByLabel("Catatan (opsional)").fill(`${TEST_PREFIX}editme`);
+    await dialog.getByRole("button", { name: "Simpan" }).click();
+    await expect(page.getByText("Penjualan dicatat")).toBeVisible({ timeout: 10_000 });
+
+    const row = page.locator("tr", { hasText: `${TEST_PREFIX}editme` });
+    await expect(row).toBeVisible();
+    // Staff sees Edit but not Arsipkan/Pulihkan/Hapus Permanen on this row.
+    await expect(row.getByRole("button", { name: "Edit" })).toBeVisible();
+    await expect(row.getByRole("button", { name: "Arsipkan" })).toHaveCount(0);
+
+    await row.getByRole("button", { name: "Edit" }).click();
+    dialog = page.locator('[role="dialog"]');
+    await expect(dialog.getByText("Edit Penjualan")).toBeVisible();
+    await dialog.getByLabel("Jumlah").fill("3");
+    await dialog.getByRole("button", { name: "Simpan" }).click();
+    await expect(page.getByText("Penjualan diperbarui")).toBeVisible({ timeout: 10_000 });
+    await expect(row.getByText("3", { exact: true })).toBeVisible();
+  });
+
+  test("admin can archive/restore a sale; super admin can hard-delete it", async ({ page }) => {
+    await loginAsAdmin(page);
+    await page.goto("/app/sales");
+    await setInputterName(page, `${TEST_PREFIX}ArchiveFlow`);
+
+    await page.getByRole("button", { name: "+ Catat Penjualan" }).click();
+    const dialog = page.locator('[role="dialog"]');
+    await dialog.getByRole("combobox").click();
+    await page.getByRole("option", { name: "Melukis Kanvas Polos", exact: false }).first().click();
+    await dialog.getByLabel("Jumlah").fill("1");
+    await dialog.getByLabel("Catatan (opsional)").fill(`${TEST_PREFIX}archiveme`);
+    await dialog.getByRole("button", { name: "Simpan" }).click();
+    await expect(page.getByText("Penjualan dicatat")).toBeVisible({ timeout: 10_000 });
+
+    let row = page.locator("tr", { hasText: `${TEST_PREFIX}archiveme` });
+    await row.getByRole("button", { name: "Arsipkan" }).click();
+    await expect(page.getByText("Penjualan diarsipkan")).toBeVisible({ timeout: 10_000 });
+    // Archived rows drop out of the default (non-archived) view.
+    await expect(row).toHaveCount(0);
+
+    await page.getByRole("checkbox", { name: "Tampilkan yang diarsipkan" }).check();
+    row = page.locator("tr", { hasText: `${TEST_PREFIX}archiveme` });
+    await expect(row).toBeVisible();
+    await expect(row.getByText("Diarsipkan")).toBeVisible();
+    // Admin cannot hard-delete — no super_admin-only button on this row.
+    await expect(row.getByRole("button", { name: "Hapus Permanen" })).toHaveCount(0);
+
+    await row.getByRole("button", { name: "Pulihkan" }).click();
+    await expect(page.getByText("Penjualan dipulihkan")).toBeVisible({ timeout: 10_000 });
+    await logout(page);
+
+    await loginAsSuperAdmin(page);
+    await page.goto("/app/sales");
+    await page.getByRole("checkbox", { name: "Tampilkan yang diarsipkan" }).check();
+    row = page.locator("tr", { hasText: `${TEST_PREFIX}archiveme` });
+    await row.getByRole("button", { name: "Arsipkan" }).click();
+    await expect(page.getByText("Penjualan diarsipkan")).toBeVisible({ timeout: 10_000 });
+    row = page.locator("tr", { hasText: `${TEST_PREFIX}archiveme` });
+    await row.getByRole("button", { name: "Hapus Permanen" }).click();
+    const confirmDialog = page.locator('[role="alertdialog"]');
+    await confirmDialog.getByRole("button", { name: "Hapus Permanen" }).click();
+    await expect(page.getByText("Penjualan dihapus permanen")).toBeVisible({ timeout: 10_000 });
+    await expect(page.locator("tr", { hasText: `${TEST_PREFIX}archiveme` })).toHaveCount(0);
   });
 
   test("all roles see the financial summary on Dashboard", async ({ page }) => {
