@@ -137,6 +137,7 @@ export interface SalesTransaction {
   total: number;
   transaction_date: string;
   notes: string | null;
+  inputter_name: string;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
@@ -153,6 +154,7 @@ export interface ExpenseTransaction {
   total: number;
   transaction_date: string;
   notes: string | null;
+  inputter_name: string;
   deleted_at: string | null;
   created_at: string;
   updated_at: string;

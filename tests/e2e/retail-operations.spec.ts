@@ -1,10 +1,24 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { loginAsAdmin, loginAsStaff, logout, TEST_PREFIX } from "./helpers";
+
+/**
+ * Reveals and fills the inline inputter-name editor (via the "Isi/Ganti
+ * Nama Penginput" button) at the top of Rekap Penjualan/Pengeluaran, then
+ * saves it. Not a dialog — remembered per browser context (localStorage)
+ * once saved.
+ */
+async function setInputterName(page: Page, name: string) {
+  await page.getByRole("button", { name: /Nama Penginput/ }).click();
+  await page.getByPlaceholder("Ketik nama penginput...").fill(name);
+  await page.getByRole("button", { name: "Simpan" }).click();
+  await expect(page.getByText(name, { exact: true })).toBeVisible();
+}
 
 test.describe("Stage 9 — Rekap Penjualan & Pengeluaran", () => {
   test("staff can record a sale and sees it in today's recap", async ({ page }) => {
     await loginAsStaff(page);
     await page.goto("/app/sales");
+    await setInputterName(page, `${TEST_PREFIX}Staff`);
 
     await page.getByRole("button", { name: "+ Catat Penjualan" }).click();
     const dialog = page.locator('[role="dialog"]');
@@ -18,11 +32,13 @@ test.describe("Stage 9 — Rekap Penjualan & Pengeluaran", () => {
     const row = page.locator("tr", { hasText: `${TEST_PREFIX}sale` });
     await expect(row).toBeVisible();
     await expect(row.getByText("2", { exact: true })).toBeVisible();
+    await expect(row.getByText(`${TEST_PREFIX}Staff`)).toBeVisible();
   });
 
   test("staff can record an expense and sees it in today's recap", async ({ page }) => {
     await loginAsStaff(page);
     await page.goto("/app/expenses");
+    await setInputterName(page, `${TEST_PREFIX}Staff`);
 
     await page.getByRole("button", { name: "+ Catat Pengeluaran" }).click();
     const dialog = page.locator('[role="dialog"]');
@@ -35,6 +51,23 @@ test.describe("Stage 9 — Rekap Penjualan & Pengeluaran", () => {
     await expect(page.getByText("Pengeluaran dicatat")).toBeVisible({ timeout: 10_000 });
     const row = page.locator("tr", { hasText: `${TEST_PREFIX}expense` });
     await expect(row).toBeVisible();
+    await expect(row.getByText(`${TEST_PREFIX}Staff`)).toBeVisible();
+  });
+
+  test("inputter name is remembered across visits and can be edited inline", async ({ page }) => {
+    await loginAsStaff(page);
+    await page.goto("/app/sales");
+    await setInputterName(page, `${TEST_PREFIX}First`);
+    await expect(page.getByText(`${TEST_PREFIX}First`, { exact: true })).toBeVisible();
+
+    // Reload — remembered for this browser context (localStorage), no
+    // re-prompt needed.
+    await page.reload();
+    await expect(page.getByText(`${TEST_PREFIX}First`, { exact: true })).toBeVisible();
+
+    // Edited directly inline via "Ganti Nama Penginput" — no dialog involved.
+    await setInputterName(page, `${TEST_PREFIX}Second`);
+    await expect(page.getByText(`${TEST_PREFIX}Second`, { exact: true })).toBeVisible();
   });
 
   test("all roles see the financial summary on Dashboard", async ({ page }) => {
