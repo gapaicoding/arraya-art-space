@@ -68,13 +68,149 @@ Area → Aktivitas → Jadwal → Availability → Booking.
 
 ## 4. Target Pengguna & Persona
 
-| # | Persona | Kebutuhan Utama |
-|---|---|---|
-| 1 | Admin Arayya | Mengatur seluruh master data dan sistem |
-| 2 | Staff Operasional | Melihat jadwal, availability, membuat booking |
-| 3 | Management | Melihat penggunaan area dan aktivitas |
-| 4 | External Organizer | Dicatat sebagai penyelenggara kegiatan eksternal |
-| 5 | Customer / Renter | Fase lanjut: melakukan reservasi langsung |
+> Diperbarui mengikuti kondisi aplikasi terkini (RBAC 3-tier sejak Stage
+> 5.3, modul retail/finansial Stage 9, halaman publik Stage 5.2/8.1) —
+> tabel ringkas versi awal sudah tidak mencerminkan struktur role dan
+> fitur yang sebenarnya berjalan.
+
+### 4.1 Persona Internal
+
+**Persona 1 — Owner (role `super_admin`)**
+- **Profil:** Pemilik Arayya Art & Space, pemegang keputusan tertinggi,
+  tidak selalu ada di lokasi setiap hari.
+- **Tujuan utama:** Memantau kondisi bisnis secara keseluruhan (omzet,
+  pengeluaran, profit) tanpa harus hadir fisik; mengendalikan siapa yang
+  boleh mengakses apa di sistem.
+- **Tantangan:** Butuh gambaran cepat kondisi bisnis dari HP kapan saja;
+  tidak punya waktu untuk urusan teknis sehari-hari.
+- **Literasi digital:** Menengah — nyaman pakai aplikasi mobile, tidak
+  perlu detail teknis.
+- **Fitur yang paling sering dipakai:** Dashboard (omzet/profit),
+  Manajemen Pengguna, Rekap Penjualan & Pengeluaran (sebagai pemantau,
+  bukan penginput harian).
+
+**Persona 2 — Admin (SPV Bidang / Captain / HRD)**
+- **Profil:** Penanggung jawab operasional harian di lokasi, mengawasi
+  staff, menangani hal yang di luar kewenangan staff biasa.
+- **Tujuan utama:** Memastikan jadwal & booking berjalan lancar tanpa
+  bentrok; mengelola master data (area, aktivitas, organizer); meninjau
+  ulang atau membetulkan data yang salah input staff (arsipkan/pulihkan
+  transaksi).
+- **Tantangan:** Harus bisa bertindak cepat di lokasi (banyak kerja dari
+  HP sambil berdiri, bukan duduk di depan komputer); staff yang gantian
+  shift butuh alur kerja yang tidak ribet.
+- **Literasi digital:** Menengah — terbiasa pakai aplikasi, tapi bukan
+  latar belakang IT.
+- **Fitur yang paling sering dipakai:** Jadwal, Booking, Master Data
+  (Area/Aktivitas/Organizer/Produk/Katalog Bahan), Analytic, review
+  Rekap Penjualan & Pengeluaran.
+
+**Persona 3 — Staff (junior staff & karyawan lini terbawah)**
+- **Profil:** Staff operasional di lapangan, seringkali baru/junior,
+  bertugas mencatat aktivitas harian secara langsung — bukan di belakang
+  meja.
+- **Tujuan utama:** Mencatat jadwal, booking, penjualan, dan pengeluaran
+  secepat dan semudah mungkin di sela kesibukan; tahu jadwal hari ini
+  tanpa perlu bertanya ke rekan lain.
+- **Tantangan:** Sering gantian device/shift dengan staff lain (perlu
+  tahu siapa yang input data terakhir); tidak selalu paham istilah
+  teknis; waktu terbatas untuk belajar aplikasi rumit.
+- **Literasi digital:** Bervariasi, dari cukup terbiasa sampai pemula —
+  aplikasi harus tetap mudah dipakai walau dengan literasi rendah.
+- **Fitur yang paling sering dipakai:** Dashboard (jadwal hari ini),
+  Jadwal, Booking, Rekap Penjualan, Rekap Pengeluaran.
+
+### 4.2 Persona Eksternal (Publik)
+
+**Persona 4 — Ibu, Pencari Kegiatan/Kelas untuk Anaknya** *(pangsa pasar
+utama)*
+- **Profil:** Ibu rumah tangga atau ibu bekerja yang aktif mencari
+  kegiatan positif untuk anaknya di waktu luang (akhir pekan, libur
+  sekolah) — misalnya kelas melukis, menghias, atau meronce. Biasanya
+  membandingkan beberapa pilihan tempat sebelum memutuskan, dan lebih
+  nyaman bertanya langsung lewat WhatsApp daripada mengisi formulir
+  panjang.
+- **Tujuan utama:** Dengan cepat tahu ada kegiatan apa saja minggu ini,
+  jadwalnya kapan, di mana, dan kisaran biayanya — lalu langsung bisa
+  tanya-tanya atau konfirmasi ke admin tanpa harus daftar akun/login.
+- **Tantangan:** Sering mengakses dari HP sambil momong anak (waktu dan
+  perhatian terbatas); tidak semua nyaman dengan proses pendaftaran
+  online yang rumit/berbayar online; lebih percaya kalau bisa ngobrol
+  langsung dengan admin dulu sebelum memutuskan.
+- **Literasi digital:** Bervariasi, dari sangat terbiasa media sosial
+  sampai kurang terbiasa transaksi online — desain harus tetap jelas dan
+  sederhana untuk keduanya.
+- **Fitur yang dipakai:** Halaman publik Agenda (`/`), Halaman Detail
+  Event (`/event/[id]`), tombol Hubungi Admin via WhatsApp. **Tidak**
+  perlu akun/login sama sekali — sesuai kebutuhan persona ini yang
+  menghindari proses ribet.
+
+### 4.3 User Stories
+
+Ditandai status implementasi saat ini: ✅ sudah berjalan, 📋 masih rencana
+(lihat §16 untuk detail stage).
+
+**Autentikasi & Hak Akses**
+- Sebagai **Owner**, saya ingin mengatur role setiap akun (super_admin/
+  admin/staff), supaya kendali sistem tetap di tangan saya. ✅
+- Sebagai **Admin**, saya ingin mengelola jadwal/booking/master data
+  tanpa bisa mengubah role pengguna lain, supaya kewenangan tertinggi
+  tetap milik Owner. ✅
+- Sebagai **Staff**, saya ingin masuk ke sistem dan langsung melihat
+  jadwal hari ini, supaya saya tahu apa yang perlu dikerjakan tanpa
+  bertanya ke rekan lain. ✅
+
+**Jadwal & Booking**
+- Sebagai **Admin/Staff**, saya ingin membuat jadwal aktivitas internal
+  atau booking eksternal dengan validasi anti-bentrok otomatis, supaya
+  tidak ada dua kegiatan memakai area yang sama di waktu yang sama. ✅
+- Sebagai **Admin**, saya ingin melihat ketersediaan area dalam
+  tampilan kalender yang mobile-friendly, supaya saya bisa cek cepat
+  dari HP di lapangan. ✅
+
+**Rekap Penjualan & Pengeluaran**
+- Sebagai **Staff**, saya ingin mencatat penjualan dan pengeluaran
+  harian dengan cepat, dan diingat siapa saya input terakhir kali di
+  perangkat ini, supaya tidak perlu isi ulang tiap kali. ✅
+- Sebagai **Admin**, saya ingin mengarsipkan/memulihkan transaksi yang
+  salah input, supaya data tetap rapi tanpa staff bisa menghapus
+  seenaknya. ✅
+- Sebagai **Super Admin**, saya ingin menjadi satu-satunya yang bisa
+  menghapus permanen data transaksi, supaya ada jejak audit yang aman
+  untuk hal yang benar-benar perlu dibersihkan. ✅
+
+**Dashboard**
+- Sebagai **Owner**, saya ingin melihat omzet, pengeluaran, dan estimasi
+  profit hari ini dalam satu layar, supaya saya bisa pantau bisnis tanpa
+  perlu hadir fisik. ✅
+- Sebagai **Staff**, saya ingin ikut melihat ringkasan omzet/profit di
+  Dashboard yang sama, supaya saya juga paham kondisi bisnis tempat saya
+  kerja (transparansi, sesuai keputusan Stage 5.3). ✅
+
+**Halaman Publik (Ibu / Pengunjung)**
+- Sebagai **Ibu pencari kegiatan anak**, saya ingin melihat daftar
+  kegiatan minggu ini tanpa perlu login, supaya saya bisa cek cepat dari
+  HP sebelum memutuskan. ✅
+- Sebagai **Ibu pencari kegiatan anak**, saya ingin membuka detail satu
+  kegiatan (jadwal, lokasi, kisaran harga, deskripsi) sebelum bertanya
+  lebih lanjut, supaya saya punya cukup info tanpa perlu chat balas-balasan
+  dulu. ✅
+- Sebagai **Ibu pencari kegiatan anak**, saya ingin langsung terhubung
+  ke WhatsApp admin dari halaman kegiatan, supaya saya bisa tanya-tanya
+  atau konfirmasi dengan cara yang paling nyaman buat saya. ✅
+
+**Rencana lanjutan (belum berjalan)**
+- Sebagai **Ibu**, saya ingin bisa melihat status ketersediaan slot
+  secara real-time sebelum menghubungi admin, supaya saya tidak kecewa
+  kalau ternyata sudah penuh. 📋 *(fondasi RPC ketersediaan sudah ada di
+  halaman detail event, tapi belum ada kuota/reservasi mengikat.)*
+- Sebagai **Ibu**, saya ingin bisa mendaftar anak saya sebagai member
+  tetap kelas tertentu (bukan sekali datang), supaya saya tidak perlu
+  daftar ulang tiap minggu. 📋 *(Stage 7 — Kids Center Foundation.)*
+- Sebagai **Ibu**, saya ingin membayar langsung di aplikasi tanpa harus
+  transfer manual, supaya prosesnya lebih praktis. 📋 *(Stage 8 —
+  Commercial Expansion, menunggu keputusan bisnis vendor payment
+  gateway.)*
 
 ---
 
