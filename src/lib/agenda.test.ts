@@ -22,7 +22,6 @@ describe("groupAgendaByDate", () => {
   it("groups rows by date, formats time range, and sorts dates ascending", () => {
     const rows: PublicAgendaRow[] = [
       {
-        id: "sched-1",
         date: "2024-01-10",
         start_at: localDateTimeToIso("2024-01-10", "09:00"),
         end_at: localDateTimeToIso("2024-01-10", "11:00"),
@@ -30,7 +29,6 @@ describe("groupAgendaByDate", () => {
         areas: { name: "Room 1" },
       },
       {
-        id: "sched-2",
         date: "2024-01-08",
         start_at: localDateTimeToIso("2024-01-08", "13:00"),
         end_at: localDateTimeToIso("2024-01-08", "14:30"),
@@ -42,7 +40,6 @@ describe("groupAgendaByDate", () => {
     const groups = groupAgendaByDate(rows);
     expect(groups.map((g) => g.date)).toEqual(["2024-01-08", "2024-01-10"]);
     expect(groups[0].items[0]).toEqual({
-      scheduleId: "sched-2",
       timeRange: "13:00–14:30",
       activityName: "Meronce Manik-Manik",
       areaName: "Room 2",
@@ -52,7 +49,6 @@ describe("groupAgendaByDate", () => {
   it("falls back to placeholder names when activity/area is missing", () => {
     const rows: PublicAgendaRow[] = [
       {
-        id: "sched-3",
         date: "2024-01-10",
         start_at: localDateTimeToIso("2024-01-10", "09:00"),
         end_at: localDateTimeToIso("2024-01-10", "11:00"),

@@ -167,5 +167,16 @@ Alasan desain ini (bukan sekadar workaround teknis):
 
 ## Status
 
-Menunggu instruksi eksekusi eksplisit dari owner sebelum implementasi
-kode dimulai, sesuai pola kerja stage-stage sebelumnya di proyek ini.
+**❌ Dibangun, lalu di-revert sepenuhnya.** Plan ini sempat diimplementasi
+penuh (tabel `event_registrations`, form publik `/daftar/[scheduleId]`,
+halaman review `/app/registrations`, migrasi `0010`/`0011`) dan
+terverifikasi jalan (e2e 3/3 lolos). Owner kemudian memutuskan tombol
+"Daftar" di halaman publik sebaiknya langsung mengarah ke WhatsApp CS
+(dengan pesan yang sudah terisi info event) — bukan form registrasi
+dengan alur review internal. Seluruh kode, tipe, nav, dan tabel database
+sudah dihapus (migrasi `0012_drop_event_registrations.sql`).
+
+Dokumen ini dibiarkan ada (bukan dihapus) sebagai riwayat keputusan —
+kalau nanti kebutuhan alur registrasi-dengan-review muncul lagi, desain
+di sini (termasuk alasan kenapa registrasi publik tidak boleh langsung
+jadi `bookings`) masih valid untuk dipakai ulang.
