@@ -999,7 +999,7 @@ MVP siap operasional.
 
 **Status: 📋 Plan garis besar tersedia** (lebih ringkas dari Stage 7 karena menyentuh keputusan bisnis yang belum bisa diasumsikan sepihak: vendor payment gateway, kebijakan refund, vendor notifikasi) — lihat `docs/stage-8-commercial-expansion-plan.md`. Bergantung pada Stage 7 selesai lebih dulu (Invoice/Payment melekat pada Enrollment dan Booking).
 
-**Stage 8.1 — Registrasi Publik (sub-stage berdiri sendiri, tidak bergantung Stage 7):** bagian "Public booking" di atas dipecah lebih dulu jadi versi ringan — form registrasi minat (bukan booking resmi/payment) di atas halaman publik agenda yang sudah ada (Stage 5.2). Plan tersedia di `docs/stage-8.1-public-event-registration-plan.md`. 📋 Belum dieksekusi.
+**Stage 8.1 — Registrasi Publik:** ❌ Dibangun penuh lalu di-revert — owner memutuskan tombol event di halaman publik langsung mengarah ke WhatsApp CS, bukan form registrasi dengan alur review internal. Lihat status detail & alasan di `docs/stage-8.1-public-event-registration-plan.md`. Sebagai gantinya, tiap baris event di halaman publik (`/`) sekarang punya tombol "Hubungi Admin" (ikon WA) yang membuka WhatsApp dengan pesan berisi info event tersebut.
 
 ### Stage 9 — Retail & Financial Operations (MVP)
 

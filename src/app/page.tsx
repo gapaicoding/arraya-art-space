@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { logError } from "@/lib/logger";
 import { currentWeekRangeJakarta, groupAgendaByDate, type PublicAgendaRow } from "@/lib/agenda";
 import { formatDateOnly } from "@/lib/format";
+import { WhatsAppIcon } from "@/components/WhatsAppIcon";
 
 export default async function PublicAgendaPage() {
   const supabase = await createClient();
@@ -11,7 +12,7 @@ export default async function PublicAgendaPage() {
 
   const { data, error } = await supabase
     .from("schedules")
-    .select("date, start_at, end_at, activities(name), areas(name)")
+    .select("id, date, start_at, end_at, activities(name), areas(name)")
     .gte("date", start)
     .lte("date", end)
     .neq("status", "cancelled")
@@ -71,15 +72,22 @@ export default async function PublicAgendaPage() {
               <p className="font-display text-base font-bold">{formatDateOnly(day.date)}</p>
               <div className="mt-3 divide-y divide-frost/60">
                 {day.items.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between gap-3 py-2.5">
+                  <Link
+                    key={i}
+                    href={`/event/${item.scheduleId}`}
+                    className="flex items-center justify-between gap-3 py-2.5"
+                  >
                     <div>
                       <p className="text-sm font-semibold">{item.activityName}</p>
                       <p className="text-xs text-muted-ink">{item.areaName}</p>
                     </div>
-                    <p className="whitespace-nowrap text-sm font-medium text-muted-ink">
-                      {item.timeRange}
-                    </p>
-                  </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      <p className="whitespace-nowrap text-sm font-medium text-muted-ink">
+                        {item.timeRange}
+                      </p>
+                      <span className="text-faint-ink">›</span>
+                    </div>
+                  </Link>
                 ))}
               </div>
             </div>
@@ -91,8 +99,9 @@ export default async function PublicAgendaPage() {
             href={`https://wa.me/${waNumber}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="gradient-brand block rounded-2xl px-5 py-3.5 text-center text-sm font-semibold text-frost shadow-lg shadow-brand/30"
+            className="gradient-brand flex items-center justify-center gap-2 rounded-2xl px-5 py-3.5 text-center text-sm font-semibold text-frost shadow-lg shadow-brand/30"
           >
+            <WhatsAppIcon />
             Hubungi Admin via WhatsApp
           </a>
         )}
